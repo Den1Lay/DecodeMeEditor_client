@@ -1,0 +1,16 @@
+@mixin flexBox($flexValue: 1) {
+  display: flex;
+  flex:$flexValue
+}
+.base {
+  width: 100vw;
+  height: 100vh;
+  @include flexBox();
+  flex-direction: column;
+  &__mainPart {
+    @include flexBox(12);
+  }
+  &__workPlace {
+    @include flexBox(10);
+  }
+}

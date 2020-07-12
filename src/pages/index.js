@@ -1,1 +1,1 @@
-export { default as Base } from './'
+export { default as Base } from './Base'

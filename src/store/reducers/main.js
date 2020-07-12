@@ -1,5 +1,5 @@
 const defState = {
-
+  initialData: "STRING"
 }
 
 export default (state = defState, action) => {

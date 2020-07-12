@@ -1,23 +1,23 @@
 import React from 'react'
 
-import {Branch, Notes, Main, Navbar} from '@/containers'
+import {Branch, Notes, Main, Navbar, Map} from '@/containers'
 
 import './Base.scss';
 
-export default () => {
+const Base = () => {
   return(
-    <>
-      <section className='base'>
-        <Navbar />
-        <div style={{display: 'flex'}}>
-          <Branch />
-          <Notes />
+    <section className='base'>
+      <Navbar />
+      <div className='base__mainPart'>
+        <Branch />
+        <div className='base__workPlace'>
           <Main />
+          <Notes />
+          {/**<Map /> */}
         </div>
-      </section>
-      <section className='map'>
-
-      </section>
-    </>
+      </div>
+    </section>
   )
 }
+
+export default Base
