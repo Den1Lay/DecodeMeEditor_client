@@ -1,1 +1,2 @@
-    export {default as main} from './main'
+export {addProject} from './main'
+export {addPod} from './main'

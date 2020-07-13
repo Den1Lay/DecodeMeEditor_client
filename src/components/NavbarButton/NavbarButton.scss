@@ -1,0 +1,13 @@
+@import '@/styles/variables';
+
+.navbarButton {
+  background-color: $light;
+  border: none;
+  border-radius: 5px;
+  color: $darkGreen;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1.9vh;
+  height: 66%;
+}

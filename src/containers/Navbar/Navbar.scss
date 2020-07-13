@@ -1,5 +1,34 @@
 @import '@/styles/variables';
+@mixin flexNavbar($flexValue) {
+  flex: $flexValue;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
 .navbar {
   flex:0.6;
   background-color: $darkGreen;
+  display: flex;
+  &__branch {
+    @include flexNavbar(3.38);
+  }
+  &__mainActions {
+    @include flexNavbar(11.7);
+  }
+  &__social {
+    @include flexNavbar(5.2);
+  }
+}
+.cascades {
+  position: absolute;
+  background-color: $light;
+  top:50px;
+  width: 30vw;
+  height: 30vh;
+}
+
+.projectForm {
+  display: flex;
+  justify-content: baseline;
 }

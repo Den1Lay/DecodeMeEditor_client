@@ -1,12 +1,17 @@
 import React from 'react'
 import {connect} from 'react-redux'
 
+import {Navbar_Branch, Navbar_Main, Navbar_Social} from './elements'
+
 import './Navbar.scss'
 
 const Navbar = () => {
+  
   return (
     <div className='navbar'>
-
+      <Navbar_Branch />
+      <Navbar_Main/>
+      <Navbar_Social/>
     </div>
   )
 }
@@ -24,4 +29,4 @@ mapDispatch = dispatch => {
 
   }
 }
-export default connect(mapState, mapDispatch )(Navbar)
+export default connect(mapState, mapDispatch)(Navbar)
