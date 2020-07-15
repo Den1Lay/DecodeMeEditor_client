@@ -5,6 +5,10 @@
   justify-content: space-around;
   align-items: center;
 }
+@mixin navbarsElems($elemsFlex, $elemsMarg) {
+  flex: $elemsFlex;
+  margin: $elemsMarg;
+}
 
 .navbar {
   flex:0.6;
@@ -12,9 +16,27 @@
   display: flex;
   &__branch {
     @include flexNavbar(3.38);
+    &_podsInput {
+      @include navbarsElems(12, 0 1.3vh)
+    }
+    &_saveBtn {
+      @include navbarsElems(4, 0 1.3vh 0 0)
+    }
+    &_showBtn {
+      @include navbarsElems(1, 0 1.3vh 0 0)
+    }
   }
   &__mainActions {
     @include flexNavbar(11.7);
+    &_projects {
+      @include navbarsElems(10, 0 1.3vh 0 0)
+    }
+    &_saves {
+      @include navbarsElems(4, 0 1.3vh 0 0)
+    }
+    &_map {
+      @include navbarsElems(1, 0)
+    }
   }
   &__social {
     @include flexNavbar(5.2);
@@ -31,4 +53,22 @@
 .projectForm {
   display: flex;
   justify-content: baseline;
+}
+
+.setuper {
+  .ant-menu-item {
+    color: $grey !important;
+    &-active {
+      color: $dark !important;
+    }
+    &-selected {
+      background-color: $darkGreen !important;
+      color: $light !important;
+      .ant-menu-item-active {
+        color: $light !important;
+      }
+    }
+    
+   
+  }
 }

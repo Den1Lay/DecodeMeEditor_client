@@ -1,6 +1,6 @@
 import React from 'react'
 
-import {NavbarInput, NavbarButton} from '@/components'
+import {Input, NavbarButton, Button} from '@/components'
 
 const Navbar_Branch = () => {
   function branchInputHandl(ev) {
@@ -17,18 +17,26 @@ const Navbar_Branch = () => {
   }
   return(
     <div className='navbar__branch'>
-      <NavbarInput 
-        placeholder={'Pods height'} 
-        changeHandler={branchInputHandl}
-        width={65}/>
-      <NavbarButton 
+      <div className='navbar__branch_podsInput'>
+        <Input 
+          place="navbar"
+          placeholder={'Pods height'} 
+          changeHandler={branchInputHandl}/>
+      </div>
+      <div className='navbar__branch_saveBtn' >
+        <Button place="navbar">Add</Button>
+      </div>
+      {/* <NavbarButton 
         simbol={"Add"}
         clickHandler={branchSaveHandl}
-        width={20}/>
-      <NavbarButton
-        simbol={"|"}
+        width={20}/> */}
+      <div className='navbar__branch_showBtn'>
+        <Button place="navbar">|</Button>
+      </div>
+      {/* <NavbarButton
+        simbol={""}
         clickHandler={branchShowHandl}
-        width={5}/>
+        width={5}/> */}
     </div>
   )
 }

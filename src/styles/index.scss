@@ -1,5 +1,6 @@
 //normalise csss
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/antd/4.4.2/antd.compact.css');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap');
 body {
   margin: 0;
   
@@ -8,11 +9,13 @@ body {
   background: #fff;
   overflow: hidden;
 }
-div, p, h1, h2, h3, section {
+div, p, h1, h2, h3, section, input, textarea, ul, li, button {
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 1.75vh !important;
   font-style: normal;
+  text-shadow: none;
 }
 
 code {

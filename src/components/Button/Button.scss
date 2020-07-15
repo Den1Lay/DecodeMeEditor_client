@@ -1,0 +1,41 @@
+@import '@/styles/variables';
+
+.button {
+  width: 100% !important;
+  height: 100% !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  &__navbar {
+    background-color: $dirtyLight !important;
+    color: $darkGreen !important;
+    border: 1px $dirtyLight solid  !important;
+    &:hover {
+      background-color: $light !important;
+      border: 1px $light solid  !important;
+    }
+    &:active {
+      background-color: $light !important;
+      border: 1px $light solid  !important;
+    }
+
+  }
+  &__main {
+    background-color: #fff !important;
+    color: $grey !important; //rgba(0,0,0,.25)
+    border: 1px $grey solid  !important;
+    &:hover {
+      border: 1px solid $lightGreen !important;
+    }
+    &:focus {
+      border: 1px solid $lightGreen !important;
+      color: $lightGreen !important;
+      //box-shadow: 0 0 0 2px rgba(163, 212, 48 , 0.3) !important;
+    }
+    &:active {
+      border: 1px solid $lightGreen !important;
+      color: $lightGreen !important;
+      box-shadow: 0 0 0 2px rgba(163, 212, 48 , 0.3) !important;
+    }
+  }
+  
+}

@@ -1,0 +1,19 @@
+@import '@/styles/variables';
+
+.realMentions {
+  width: 100%;
+  textArea {
+    &::placeholder {
+      color: $grey !important;
+    }
+  }
+}
+.ant-mentions {
+  &:hover {
+    border-color: #a3d430 !important;
+  }
+}
+.ant-mentions-focused {
+  border-color: rgb(163, 212, 48) !important;
+  box-shadow: 0 0 0 2px rgba(163, 212, 48 , 0.3) !important;
+}
