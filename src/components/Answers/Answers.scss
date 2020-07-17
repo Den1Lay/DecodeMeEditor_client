@@ -1,0 +1,41 @@
+@import '@/styles/variables';
+
+.ant-tabs-tab {
+  min-width: 2.9vw !important;
+  display: flex;
+  justify-content: center;
+  &:active {
+    color: $lightGreen !important; 
+  }
+  &:hover {
+    color: $lightGreen !important; 
+  }
+  &-active {
+    .ant-tabs-tab-btn {
+      &:active {
+        color: $lightGreen !important; 
+      }
+      &:focus {
+        color: $lightGreen !important; 
+      }
+      color: $lightGreen !important; 
+    }
+    
+  }
+}
+.ant-tabs-nav-add {
+  min-width: 2.9vw !important;
+  &:hover {
+    color: $lightGreen !important; 
+  }
+  &:active {
+    color: $lightGreen !important; 
+  }
+  &:focus {
+    color: $lightGreen !important; 
+  }
+}
+
+.refToPod {
+  margin-top: 1.3vh;
+}

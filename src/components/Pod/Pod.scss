@@ -1,0 +1,55 @@
+@import '@/styles/variables';
+
+.pod {
+  margin: 1.3vh 1.3vh 0 1.3vh;
+  min-height: 9vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: column;
+  background: $dirtyLight;
+  border-radius: 2px;
+  color: $darkGreen;
+  &-actived {
+    background: $dark;
+    color: $light
+  }
+  &__top {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    &_btns {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .anticon {
+        font-size:1.5vh !important;
+        cursor: pointer;
+      }
+      &_delete {
+        margin: 0 0.7vh;
+      }
+      &_plus {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        
+        
+  
+      }
+    }
+    
+    &_height {
+      
+      margin: 0 0.7vh;
+     
+    }
+    &_label {
+
+    }
+    
+  }
+  &__content {
+    margin: 0 0.7vh;
+  }
+}

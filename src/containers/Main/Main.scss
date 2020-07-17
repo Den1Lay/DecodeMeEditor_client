@@ -46,6 +46,13 @@
       margin: 1.3vh;
       margin-bottom: 0;
     }
+    &_comment {
+      margin: 1.3vh;
+    }
+    &_tabs {
+      margin:  0 1.3vh;
+      @include vision()
+    }
   };
   &__right {
     flex: 6;
@@ -60,6 +67,14 @@
     &_dialog {
       margin: 1.3vh;
       margin-left: 0;
+    }
+    &_branchDir {
+      margin: 1.3vh;
+      margin-left: 0;
+    }
+    &_metaData {
+      margin-right: 1.3vh;
+      @include vision();
     }
   }
   }

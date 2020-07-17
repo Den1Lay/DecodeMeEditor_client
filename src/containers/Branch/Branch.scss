@@ -1,5 +1,43 @@
 @import '@/styles/variables';
+::-webkit-scrollbar {
+  width: 1.3vh;
+  border-left: 1px solid $darkGreen;
+  border-right: 1px solid $darkGreen;
+}
+
+// /* Track */
+// ::-webkit-scrollbar-track {
+//   background: $green; 
+// }
+ 
+// /* Handle */
+// ::-webkit-scrollbar-thumb {
+//   background: $darkGreen; 
+// }
+
+// /* Handle on hover */
+// ::-webkit-scrollbar-thumb:hover {
+//   background: #555; 
+// }
+
 .branch {
   background-color: $green;
   flex: 2;
+  overflow: scroll;
+  overflow-x: hidden;
+  display: flex;
+ 
+
+  &__wrapper {
+    flex: 12;
+    height: fit-content;
+    display: flex;
+    flex-direction: column-reverse;
+    position: relative;
+  }
+  &__scroll {
+    flex: 1;
+    height: 100%;
+    width: 1.3vh;
+  }
 }

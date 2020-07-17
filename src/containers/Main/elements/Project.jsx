@@ -44,7 +44,7 @@ const [projectData, setProjectData] = useState({name: '', description: ''})
       </div>
       <div className='project__bottomPart'>
         <div className='project__bottomPart_description'>
-          <Mentions row={2} placeholder='description' changeHandler={descriptionHandl}/>
+          <Mentions value={projectData.description} row={2} placeholder='description' changeHandler={descriptionHandl}/>
         </div>
       </div>
     </>

@@ -6,9 +6,10 @@ import {SearchOutlined} from '@ant-design/icons' //< />
 
 import './Input.scss'
 
-const InputBase = ({width=100, place='main', placeholder, changeHandler}) => {
+const InputBase = ({width=100, place='main', placeholder, changeHandler, value}) => {
   return (
     <Input 
+      value={value}
       style={{width: width+'%'}}
       //prefix={<SearchOutlined />}
       onChange={changeHandler}

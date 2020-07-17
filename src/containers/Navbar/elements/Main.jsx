@@ -27,7 +27,7 @@ const Navbar_ProjectForm = ({addProject, onAddProject}) => {
 }
 
 const Navbar_Main = ({projects, currentProject, opedProjectCreator, selectProject, openVersionsEditor}) => {
-  debugger
+
   const [showProjects, setShowProjects] = useState(false)
   const [hideDls, setHideDls] = useState(true)
   function projectsSubmitHandl(ev) {

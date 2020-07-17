@@ -7,7 +7,6 @@
   "projects": [
     {
       "name": "string",
-      "dateCreation": "string",
       "description": "string",
       "access": ["Es_ILias"],
       "metaDataForm": {
@@ -20,8 +19,10 @@
       },
       "versies": {
         "0": {
+          "dateCreation": "string",
           "pos": "0",
           "branch": {
+            "branchDirection": "",
             "base": [
               {
                 "coord": {
