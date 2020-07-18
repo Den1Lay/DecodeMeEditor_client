@@ -179,10 +179,31 @@ export default (state = defState, action) => {
       } else if(selectedType === "1" && state.currentHeight !== 'question') {
         updateAnswers()
         realWorkBranch.base.splice(state.currentHeight, 1);
-        state.currentHeight = 'question'
+        state.currentHeight = 'question';
         //обновить вопрос и ответы, а так же ликвидировать ПОД по высоте
       } else if(selectedType === "0" && state.currentHeight === 'question') {
-        state.currentHeight = realWorkBranch.base.length;
+        debugger
+        let realWorkBranch = state.workBranch.branch;
+        realWorkBranch.base = [...realWorkBranch.base, {
+          coord: {
+            path: state.workBranch.pos,
+            height: realWorkBranch.base.length
+          },
+          label,
+          main: mainPart,
+          comment,
+          picture: {
+            src: null,
+            alt: artsDesription,
+          }
+        }]
+        state.currentHeight = realWorkBranch.base.length-1;
+        
+        for(let i = 0; i < realWorkBranch.choseCount; i++) {
+          delete realWorkBranch[i];
+        }
+        realWorkBranch.choseCount = false;
+        realWorkBranch.question = 0;
         //опасный момент. Оставлю на последок.
         //создать ПОД по максимальной высоте и ликвидировать вопрос с ответами.
       }
