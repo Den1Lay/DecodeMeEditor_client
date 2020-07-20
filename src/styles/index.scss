@@ -16,6 +16,7 @@ div, p, h1, h2, h3, section, input, textarea, ul, li, button {
   font-size: 1.75vh !important;
   font-style: normal;
   text-shadow: none;
+  box-sizing: border-box;
 }
 
 code {

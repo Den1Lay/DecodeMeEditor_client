@@ -10,9 +10,35 @@
   background: $dirtyLight;
   border-radius: 2px;
   color: $darkGreen;
+  transition: 0.7s ease-in-out;
+  &-just {
+    &:hover {
+      transition: 0.7s ease-in-out;
+      background: $light;
+      .ant-mentions {
+        textArea {
+          transition: 0.7s ease-in-out;
+          color: $darkGreen !important;
+          background-color: $light !important;
+        }
+      }
+    }
+  }
   &-actived {
     background: $dark;
-    color: $light
+    color: $light;
+    .ant-mentions {
+      textArea {
+        transition: 0.7s ease-in-out;
+        color: $light !important;
+        background-color: $darkGreen !important;
+      }
+    }
+    // &:hover {
+    //   transition: 0.7s ease-in-out;
+    //   background: $darkGreen !important;
+    //   
+    // }
   }
   &__top {
     width: 100%;
@@ -24,16 +50,25 @@
       align-items: center;
       .anticon {
         font-size:1.5vh !important;
-        cursor: pointer;
+        cursor: pointer !important; 
       }
       &_delete {
-        margin: 0 0.7vh;
+        &-show {
+          transition: 0.7s ease-in-out;
+          opacity: 1;
+        }
+        &-hide {
+          transition: 0.7s ease-in-out;
+          opacity: 0;
+        }
+        //cursor: pointer !important; 
       }
       &_plus {
         display: flex;
         justify-content: center;
         align-items: center;
-        
+        margin: 0 0.7vh;
+        //cursor: pointer !important; 
         
   
       }
@@ -49,7 +84,36 @@
     }
     
   }
-  &__content {
-    margin: 0 0.7vh;
+  &__bottom {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    &-just {
+      .ant-mentions {
+        border: none !important;
+        &-focused {
+          box-shadow: none !important;
+        }
+        textArea {
+          transition: 0.7s ease-in-out;
+          color: $darkGreen !important;
+          background-color: $dirtyLight !important;
+        }
+      }
+    }
+    &-actived {
+      .ant-mentions {
+        border: none !important;
+        &-focused {
+          box-shadow: none !important;
+        }
+        textArea {
+          color: $light !important;
+          background-color: $dark !important;
+        }
+      }
+    }
   }
 }

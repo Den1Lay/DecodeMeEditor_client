@@ -2,8 +2,16 @@ export const addPod = payload => ({
   type: 'ADD_POD',
   payload
 })
+export const deletePod = payload => ({
+  type: 'DELETE_POD',
+  payload
+})
 export const savePod = payload => ({
   type: 'SAVE_POD',
+  payload
+})
+export const choosePod = payload => ({
+  type: 'CHOOSE_POD',
   payload
 })
 export const addProject = payload => ({

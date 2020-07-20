@@ -4,11 +4,31 @@
     "password": "17171717",
     "secret": "17"
   },
+  "projectsCoordData": [
+    {
+      "lastVersion": "1",
+      "projectsId": "uuid11",
+      "0": {
+        "path": "001010",
+        "height": "question"
+      }, 
+      "1": {
+        "path": "01010101011111100123400110",
+        "height": 15
+      }, 
+      "2": {
+        "path": "0",
+        "height": 0
+      }
+    }
+  ],
+  "lastProject": "uuid11",
   "projects": [
     {
       "name": "string",
       "description": "string",
       "access": ["Es_ILias"],
+      "projectId": "uuid11",
       "metaDataForm": {
         "healt": 5,
         "enny": {

@@ -1,11 +1,26 @@
-import {format} from 'date-fns'
+import {format} from 'date-fns';
+
+const projectsCoordData = [
+  {
+    projectId: 'uuid11',
+    lastVersion: "1",
+    0: {
+      path: "0",
+      height: 0
+    }
+  }
+]
 
 const projects = [{
   name: "QWE",  
   description: "QWE",
-  lastVersion: 0,
+  lastVersion: 0, //proj v || wb v
   versions: [{
   comment: 'Init',
+  lastCoords: {
+    path: "0",
+    height: 0
+  },
   date: format(new Date(), "yyyy-MM-dd"),
   data: {
     pos: "0",
@@ -31,6 +46,7 @@ const projects = [{
 }]}]
 
 const defState = {
+  projectsCoordData,
   initialData: "STRING", 
   demo_projects: [
     {name: 'Week in forest', date: '10.07.2020'},
@@ -41,6 +57,7 @@ const defState = {
   currentProject: 0,
   currentVersion: 0,
   currentHeight: 0,
+  workProject: 0,
   workBranch: projects[0].versions[0].data,
   mainPlace: 'editor', // project save
 }
@@ -147,7 +164,9 @@ export default (state = defState, action) => {
             pos: state.workBranch.pos+key,
             branch: {
               branchDirection: '',
-              base: [], // сделать красиво
+              base: [
+                
+              ], // сделать красиво
               question: false,
               choseCount: 0,
               ref: ref.length === 0 ? false : ref,
@@ -178,11 +197,23 @@ export default (state = defState, action) => {
         updateAnswers()
       } else if(selectedType === "1" && state.currentHeight !== 'question') {
         updateAnswers()
+        debugger
+        if(state.currentHeight < (realWorkBranch.base.length-1)) {
+          // Добавить уведомления о том, что поды были перемещены по нулевому ответу
+          let zeroBase = realWorkBranch.base.splice(state.currentHeight+1);
+          // переписать адресы подов в соответсвтующие
+          realWorkBranch[0].branch.base = zeroBase.map((el, i) => {
+            return {
+              ...el,
+              coord: {path: el.coord.path+"0", height: i}
+            }
+          });
+        }
         realWorkBranch.base.splice(state.currentHeight, 1);
         state.currentHeight = 'question';
+        
         //обновить вопрос и ответы, а так же ликвидировать ПОД по высоте
       } else if(selectedType === "0" && state.currentHeight === 'question') {
-        debugger
         let realWorkBranch = state.workBranch.branch;
         realWorkBranch.base = [...realWorkBranch.base, {
           coord: {
@@ -216,35 +247,87 @@ export default (state = defState, action) => {
 
     case 'ADD_POD': 
     return (() => {
-      console.log("DATA:", payload.data, "TYPE:", payload.selectedType);
-
+      debugger
+      console.log(payload)
         // создание нового элемента и переадресация процесса на него
         let realWorkBranch = state.workBranch.branch;
-        realWorkBranch.base = [...realWorkBranch.base, {
-          coord: {
-            path: state.workBranch.pos,
-            height: realWorkBranch.base.length
-          },
-          label: '',
-          main: '',
-          comment: '',
-          picture: {
-            src: null,
-            alt: ''
-          }
-        }]
-        let currentHeight = realWorkBranch.base.length-1;
+        if(payload !== 'question') {
+          let firstPart = realWorkBranch.base.slice(0, payload+1);
+          let secondPart = realWorkBranch.base.slice(payload+1);
+          realWorkBranch.base = [...firstPart, {
+            coord: {
+              path: state.workBranch.pos,
+              height: payload+1
+            },
+            label: '',
+            main: '',
+            comment: '',
+            picture: {
+              src: null,
+              alt: ''
+            }
+          }].concat(secondPart.map((data) => {
+            const {path, height} = data.coord
+            return {...data, coord: {path, height: height+1}}
+          }));
+          state.currentHeight = payload+1
+      } else {
+          realWorkBranch.base = [...realWorkBranch.base, {
+            coord: {
+              path: state.workBranch.pos,
+              height: realWorkBranch.base.length
+            },
+            label: '',
+            main: '',
+            comment: '',
+            picture: {
+              src: null,
+              alt: ''
+            }
+          }];
+          state.currentHeight = realWorkBranch.base.length-1;
+        }
 
+        
+        state.workBranch.v = Math.random();
       return {
-        ...state,
-        currentHeight
+        ...state
       }
     })()
-
-    case "DELETE_POD":
+    case 'CHOOSE_POD': 
     return (() => {
       return {
         ...state,
+        currentHeight: payload
+      }
+    })()
+    case "DELETE_POD":
+    return (() => {
+      debugger
+      console.log(payload)
+      let realWorkBranch = state.workBranch.branch;
+      let newCurrentHeight;
+      if(payload === 'question') {
+        for(let i = 0; i < realWorkBranch.choseCount; i++) {
+          delete realWorkBranch[i]
+        }
+        realWorkBranch.choseCount = 0;
+        realWorkBranch.question = false;
+        newCurrentHeight = realWorkBranch.base.length-1;
+      } else {
+        realWorkBranch.base.splice(payload, 1);
+        realWorkBranch.base = realWorkBranch.base.map((el, i) => ({...el, coord: {...el.coord, height: i}}))
+       
+        if((realWorkBranch.base.length-1) >= payload) {
+          newCurrentHeight = payload;
+        } else {
+          newCurrentHeight = payload-1;
+        }
+      }
+      state.workBranch.v = Math.random();
+      return {
+        ...state,
+        currentHeight: newCurrentHeight,
       }
     })()
     case 'SELECT_PROJECT': 

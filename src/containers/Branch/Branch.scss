@@ -7,13 +7,13 @@
 
 // /* Track */
 // ::-webkit-scrollbar-track {
-//   background: $green; 
+//   background: $darkGreen; 
 // }
  
 // /* Handle */
-// ::-webkit-scrollbar-thumb {
-//   background: $darkGreen; 
-// }
+::-webkit-scrollbar-thumb {
+  background: $darkGreen; 
+}
 
 // /* Handle on hover */
 // ::-webkit-scrollbar-thumb:hover {
@@ -21,6 +21,7 @@
 // }
 
 .branch {
+  height: 95.2vh;
   background-color: $green;
   flex: 2;
   overflow: scroll;

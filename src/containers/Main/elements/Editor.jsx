@@ -23,28 +23,35 @@ const Editor = ({savePod, workBranch, currentHeight}) => {
   const [checkHeight, setCheckHeight] = useState(null);
 
 useEffect(() => {
-  console.log('DEBAG_DATA:', workBranch, 'CURRENT_HEIGHT:', currentHeight);
-  let main = function(pass){
-    const {label, main, comment, picture: {alt}} = pass
+  debugger
   if(currentHeight !== checkHeight) {
-    setData({
-      label, 
-      mainPart: main, 
-      comment, 
-      artsDesription: alt,
-      answers: [
-        { content: '', key: '0', closable: false, ref: '' },
-        { content: '', key: '1', closable: false, ref: '' },
-      ],
-      branchDirection: workBranch.branch.branchDirection})
-    setCheckHeight(currentHeight)
-  }
-  }
+    let dataSource = currentHeight !== 'question' ? workBranch.branch.base[currentHeight] : workBranch.branch.question;
+      const {label, main, comment, picture: {alt}} = dataSource;
+      let answers = [
+        { content: '', key: '0', closable: false, ref: ''},
+        { content: '', key: '1', closable: false, ref: ''},
+      ];
+      
+        let realWorkBranch = workBranch.branch;
+        if(realWorkBranch.choseCount) {
+          let newAnswers = []
+          
+          for(let i = 0; i < realWorkBranch.choseCount; i++) {
+            let {ans, branch: {ref}} = realWorkBranch[i]
+            newAnswers.push({content: ans, key: i+'', closable: false, ref: ref ? ref : ''})
+          }
+          answers = newAnswers;
+        }
   
-  if(workBranch.branch.base.length) {
-    main(workBranch.branch.base[currentHeight])
-  } else {
-    main(workBranch.branch.question)
+      setData({
+        label, 
+        mainPart: main, 
+        comment, 
+        artsDesription: alt,
+        answers,
+        branchDirection: workBranch.branch.branchDirection})
+      setCheckHeight(currentHeight);
+      setSelectedType(currentHeight !== 'question' ? "0" : "1")
   }
 })
   
@@ -71,13 +78,20 @@ useEffect(() => {
       <div className='editor__left'>
         <div style={{display: 'flex'}}>
           <div className='editor__left_dropMenu'>
-            <Dropdown overlay={menu}>
+          <Button clickHandler={() => {
+            (workBranch.branch.choseCount === 0 || currentHeight === 'question') && setSelectedType(selectedType === '0' ? "1" : "0");
+          }}>
+            {selectedType === '0' ? "POD" : "QUESTION"}
+          </Button>
+            {/* <Dropdown overlay={menu}>
               <div>
-              <Button>
+              <Button clickHandler={() => {
+
+              }}>
                 {selectedType === '0' ? "POD" : "QUESTION"}
               </Button>
               </div>
-            </Dropdown>
+            </Dropdown> */}
             {/* <Dropdown /> */}
           </div>
           <div className='editor__left_label'>
@@ -119,4 +133,4 @@ useEffect(() => {
   )
 }
 
-export default connect(({main: {workBranch, currentHeight}}) => ({workBranch, currentHeight}), {savePod})(Editor)
+export default connect(({main: {workBranch, currentHeight}}) => ({workBranch, currentHeight, v: workBranch.v}), {savePod})(Editor)
