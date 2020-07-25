@@ -28,6 +28,15 @@
   overflow-x: hidden;
   display: flex;
  
+  &__plug {
+    //height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 3vh;
+    color: $light;
+    //align-items: center;
+  }
 
   &__wrapper {
     flex: 12;

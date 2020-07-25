@@ -32,3 +32,6 @@ export const addVersion = payload => ({
 export const openVersionsEditor = () => ({
   type: 'OPEN_VERSIONS_EDITOR'
 })
+export const loginIn = () => ({
+  type: 'LOGIN_IN'
+})

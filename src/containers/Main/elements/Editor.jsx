@@ -10,7 +10,7 @@ import {Dropdown, Menu} from 'antd'
 import {savePod} from '@/actions'
 
 const Editor = ({savePod, workBranch, currentHeight}) => {
-  //const [typesVisible, setTypesVisible] = useState(false)
+  
   const [selectedType, setSelectedType] = useState('0'); // 0: POD, 1: QUESTION
   const [data, setData] = useState({
     label: "",
@@ -24,9 +24,9 @@ const Editor = ({savePod, workBranch, currentHeight}) => {
 
 useEffect(() => {
   debugger
-  if(currentHeight !== checkHeight) {
+  if(workBranch.branch.base && (currentHeight !== checkHeight)) {
     let dataSource = currentHeight !== 'question' ? workBranch.branch.base[currentHeight] : workBranch.branch.question;
-      const {label, main, comment, picture: {alt}} = dataSource;
+      const {label, main, comment, picture: {alt}} = dataSource;  
       let answers = [
         { content: '', key: '0', closable: false, ref: ''},
         { content: '', key: '1', closable: false, ref: ''},
@@ -79,7 +79,7 @@ useEffect(() => {
         <div style={{display: 'flex'}}>
           <div className='editor__left_dropMenu'>
           <Button clickHandler={() => {
-            (workBranch.branch.choseCount === 0 || currentHeight === 'question') && setSelectedType(selectedType === '0' ? "1" : "0");
+             currentHeight !== null && (workBranch.branch.choseCount === 0 || currentHeight === 'question') && setSelectedType(selectedType === '0' ? "1" : "0");
           }}>
             {selectedType === '0' ? "POD" : "QUESTION"}
           </Button>
@@ -133,4 +133,8 @@ useEffect(() => {
   )
 }
 
-export default connect(({main: {workBranch, currentHeight}}) => ({workBranch, currentHeight, v: workBranch.v}), {savePod})(Editor)
+export default connect(({main: {workBranch, workPCD}}) => ({
+  workBranch, 
+  v: workBranch.v,
+  currentHeight: workPCD ? workPCD[workPCD.workVersion].height : null
+}), {savePod})(Editor)

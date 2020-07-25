@@ -2,11 +2,14 @@ import React from 'react'
 import {connect} from 'react-redux'
 import classNames from 'classnames';
 
+import {Button} from '@/components'
 import {Editor, Project, Version} from './elements'
+
+import {opedProjectCreator} from '@/actions'
 
 import './Main.scss';
 
-const Main = ({mainPlace}) => {
+const Main = ({mainPlace, opedProjectCreator}) => {
   //debugger
   return(
     <div className='main'>
@@ -19,8 +22,11 @@ const Main = ({mainPlace}) => {
       <div className={classNames('version', mainPlace === 'version' ? 'version-show' : 'version-hide')}>
         <Version />
       </div>
+      <div className={classNames('beginner', mainPlace === 'beginner' ? 'beginner-show' : 'beginner-hide')}>
+        <Button clickHandler={() => opedProjectCreator()}>CREATE YOUR FIRST PROJECT</Button> 
+      </div>
     </div>
   )
 }
 
-export default connect(({main: {mainPlace}})=> ({mainPlace}))(Main)
+export default connect(({main: {mainPlace}})=> ({mainPlace}), {opedProjectCreator})(Main)

@@ -28,6 +28,7 @@
       "name": "string",
       "description": "string",
       "access": ["Es_ILias"],
+      "great_access": ["Es_ILias"],
       "projectId": "uuid11",
       "metaDataForm": {
         "healt": 5,

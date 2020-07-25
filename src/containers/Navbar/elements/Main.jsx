@@ -9,7 +9,7 @@ import {Dropdown,Menu} from 'antd'
 
 import {addProject, opedProjectCreator, selectProject, openVersionsEditor} from '@/actions'
 
-const Navbar_ProjectForm = ({addProject, onAddProject}) => {
+const Navbar_ProjectForm = ({addProject, onAddProject, workPCD}) => {
   function creatProjectHandl(ev) {
     ev.preventDefault();
     ev.persist();
@@ -26,10 +26,11 @@ const Navbar_ProjectForm = ({addProject, onAddProject}) => {
   )
 }
 
-const Navbar_Main = ({projects, currentProject, opedProjectCreator, selectProject, openVersionsEditor}) => {
-
-  const [showProjects, setShowProjects] = useState(false)
-  const [hideDls, setHideDls] = useState(true)
+const Navbar_Main = ({projects, opedProjectCreator, selectProject, openVersionsEditor, projectId, workVersion}) => {
+debugger
+  //const {projectId, workVersion} = workPCD || {projectId: null, workVersion: null}
+  const [showProjects, setShowProjects] = useState(false);
+  const [hideDls, setHideDls] = useState(true);
   function projectsSubmitHandl(ev) {
     ev.persist()
   }
@@ -71,11 +72,11 @@ const Navbar_Main = ({projects, currentProject, opedProjectCreator, selectProjec
   
 
   function makeMenu({data, addHandler, current}) {
-    let itemsArr = data.map(({name, date}, i) => {
+    let itemsArr = data.map(({name, date, superId}) => {
       return (
         <Menu.Item 
-          key={i+''} 
-          className={classNames(i === currentProject && 'ant-menu-item-selected')}
+          key={superId+''} 
+          className={classNames(superId === current && 'ant-menu-item-selected')}
           >
           <div style={{display: 'flex', justifyContent: 'space-between'}}>
             <span>{name}</span>
@@ -93,13 +94,20 @@ const Navbar_Main = ({projects, currentProject, opedProjectCreator, selectProjec
         </div>
         <Menu 
           onSelect={onSelectHandl}
-          defaultSelectedKeys={[curProjectInd]}> 
+          //defaultSelectedKeys={[curProjectInd]}
+          > 
           {itemsArr}
         </Menu>
       </div>
     );
   }
-  console.log('PROJ_LENGHT:',projects.length)
+  //console.log('PROJ_LENGHT:',projects.length)
+  let projectInd = null;
+  for(let i=0;i<projects.length;i++) {
+    if(projects[i].superId === projectId) {
+      projectInd = i;
+    }
+  }
 
   return (
     <div className='navbar__mainActions'>
@@ -133,11 +141,11 @@ const Navbar_Main = ({projects, currentProject, opedProjectCreator, selectProjec
           overlay={makeMenu({
             data: projects, 
             addHandler: pickAddHandl, 
-            current: currentProject})} 
+            current: projectId})} 
           //visible={}
           //trigger={['click']} 
           onVisibleChange={(ev) => console.log('OnVisibleChange', ev)}>
-          <div><Input place='navbar' placeholder={currentProject === null ? "Let's create some-thing" : projects[currentProject].name } /></div>
+          <div><Input place='navbar' placeholder={projects.length ? projects[projectInd].name : "Let's create some-thing" } /></div>
         </Dropdown>
       </div>
       <div className='navbar__mainActions_saves'>
@@ -145,10 +153,10 @@ const Navbar_Main = ({projects, currentProject, opedProjectCreator, selectProjec
          projects.length
          ? <Dropdown 
             overlay={makeMenu({
-              data:projects[currentProject].versions , 
+              data:projects[projectInd].versions , 
               addHandler: () => openVersionsEditor(), 
-              current: projects[currentProject].lastVersion})}>
-            <div><Input place='navbar' placeholder={projects[currentProject].versions[projects[currentProject].lastVersion].comment}/></div>
+              current: projects[projectInd].lastVersion})}>
+            <div><Input place='navbar' placeholder={projects[projectInd].versions[workVersion].comment}/></div>
           </Dropdown>
         : <Input place='navbar' placeholder='Nonee'/>
         }
@@ -171,5 +179,9 @@ const Navbar_Main = ({projects, currentProject, opedProjectCreator, selectProjec
 }
 //
 export default connect(
-  ({main: {demo_projects, projects, currentProject}})=>({projects, currentProject, versions: projects.length ?  projects[currentProject].versions : []}), 
+  ({main: {demo_projects, projects, workPCD}})=>({
+    projects,
+    projectId: workPCD ? workPCD.projectId : null,
+    workVersion: workPCD ? workPCD.workVersion : null
+  }), 
   {addProject, opedProjectCreator, selectProject, openVersionsEditor})(Navbar_Main)

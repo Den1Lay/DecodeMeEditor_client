@@ -23,7 +23,7 @@ const Pod = ({actived, label, height, onPlus, onDelete, onChoose, showDelete}) =
           <div className={classNames('pod__top_btns_delete', showDelete ? 'pod__top_btns_delete-show' : 'pod__top_btns_delete-hide')} onClick={deleteHandl}>
             <DeleteOutlined />
           </div>
-          <div className='pod__top_btns_plus' onClick={()=> onPlus(height)}>
+          <div className='pod__top_btns_plus' onClick={(ev)=> {ev.stopPropagation();onPlus(height)}}>
             <PlusOutlined />
           </div>
         </div>
