@@ -1,11 +1,12 @@
-import {format} from 'date-fns';
+import {format, startOfWeek} from 'date-fns';
 import {v4} from 'uuid'
+import FastClone from 'fastest-clone'
 
 const projectsCoordData = [
   {
     projectId: 'uuid11',
-    workVersion: "0",
-    0: {
+    workVersion: "uuid12",
+    "uuid12": {
       path: "0",
       height: 0
     }
@@ -20,6 +21,7 @@ const projects = [{
   versions: [{
   comment: 'Init',
   date: format(new Date(), "yyyy-MM-dd"),
+  superId: 'uuid12',
   data: {
     pos: "0",
     branch: {
@@ -44,7 +46,7 @@ const projects = [{
 }]}]
 
 const defState = {
-  projectsCoordsData: false,
+  projectsCoordsData: [],
   projects: false,
   //currentBranch: "0",
   //currentProject: 0,
@@ -63,6 +65,7 @@ export default (state = defState, action) => {
   switch(type) {
   
     case 'ADD_PROJECT': 
+    debugger
     const {name, description} = payload
     let projects = [{
       name,  
@@ -71,6 +74,7 @@ export default (state = defState, action) => {
       versions: [{
       comment: 'Init',
       date,
+      superId: v4(),
       data: {
         pos: "0",
         branch: {
@@ -93,10 +97,11 @@ export default (state = defState, action) => {
         }
       }
     }]}].concat(...state.projects);
+    let firstVSId = projects[0].versions[0].superId;
     state.workPCD = {
       projectId: projects[0].superId,
-      workVersion: "0",
-      0: {
+      workVersion: firstVSId,
+      [firstVSId]: {
         path: "0",
         height: 0
       }
@@ -118,22 +123,70 @@ export default (state = defState, action) => {
         ...state,
         mainPlace: 'version'
       }
-    case 'ADD_VERSION': 
+    case 'ADD_VERSION':
     // допилить кода сюда и коммитнуть
-    //debugger
-      let originProject = state.projects[state.currentProject];
-      originProject.versions = [{
+    debugger
+    return (() => {
+      // пройдись с дебагером тут
+      // debugger
+      // delete state.workBranch;
+
+      let projectInd;
+      state.projects.forEach(({superId}, i) => {
+        if(state.workPCD.projectId === superId) {
+          projectInd = i;
+        }
+      });
+      let versionInd;
+      state.projects[projectInd].versions.forEach(({superId}, i) => {
+        if(state.workPCD.workVersion === superId) {
+          versionInd = i
+        }
+      })
+      // DATA EXAMPLE IS LAST VERSION;
+      let dataExample = state.projects[projectInd].versions[versionInd].data;
+
+      let DataFactory = FastClone.factory(dataExample);
+      let dataClone = new DataFactory(dataExample);
+      // debugger
+      let newVersionInd = v4();
+      state.projects[projectInd].versions.push({
         comment: payload.comment,
         date,
-        data: originProject.versions[0].data
-      }].concat(...originProject.versions);
-      //originProject.lastVersion = originProject.lastVersion+1;
-      //state.projects[state.currentProject] = originProject;
+        superId: newVersionInd,
+        data: dataClone
+      });
+
+      let PCDInd;
+      state.projectsCoordsData.forEach(({projectId}, i) => {
+        if(state.workPCD.projectId === projectId) {
+          PCDInd = i;
+        }
+      });
+      
+      let PCDFactory = FastClone.factory(state.workPCD[state.workPCD.workVersion]);
+      
+      state.projectsCoordsData[PCDInd][newVersionInd] = new PCDFactory(state.workPCD[state.workPCD.workVersion]); // точечное копирование???
+      state.projectsCoordsData[PCDInd].workVersion = newVersionInd;
+      
+      //delete state.workPCD;
+      state.workPCD = state.projectsCoordsData[PCDInd];
+
+      let newWorkBranch = state.projects[projectInd].versions[state.projects[projectInd].versions.length-1].data; 
+      let path = state.workPCD[state.workPCD.workVersion].path.substring();
+      path = path.substring(1);
+      while(path.length) {
+        newWorkBranch = newWorkBranch.branch[path[0]];
+        path = path.substr(1);
+      };
+
+      newWorkBranch.v = random
       return {
         ...state,
-        projects: state.projects,
+        workBranch: newWorkBranch,
         mainPlace: 'editor'
       }
+    })()
     case 'SAVE_POD': 
    
     return (() => {
@@ -158,7 +211,8 @@ export default (state = defState, action) => {
             alt: artsDesription
           }
         }
-      }
+      };
+
       const updateAnswers = () => {
         answers.forEach(({content, key, ref}) => {
           realWorkBranch[key] = {
@@ -351,8 +405,13 @@ export default (state = defState, action) => {
       })
 
       state.workPCD = state.projectsCoordsData[PCDInd]; 
-      state.workBranch = {};
-      state.workBranch = state.projects[projectInd].versions[state.workPCD.workVersion].data;
+      let versionInd;
+      for(let i in state.projects[projectInd].versions) {
+        if(state.projects[projectInd].versions[i].superId === state.workPCD.workVersion) {
+          versionInd = i;
+        }
+      };
+      state.workBranch = state.projects[projectInd].versions[versionInd].data;
   
       let workPath = state.workPCD[state.workPCD.workVersion].path.substring();
       workPath = workPath.substring(1);
@@ -365,7 +424,37 @@ export default (state = defState, action) => {
         ...state,
       }
     })()
-      
+    case 'SELECT_VERSION': 
+    return (() => {
+      debugger
+      console.log('payload');
+      state.workPCD.workVersion = payload;
+
+      let projectInd;
+      for(let i in state.projects) {
+        if(state.projects[i].superId === state.workPCD.projectId) {
+          projectInd = i
+        }
+      }
+
+      let versionInd;
+      for(let i in state.projects[projectInd].versions) {
+        if(payload === state.projects[projectInd].versions[i].superId) {
+          versionInd = i;
+        }
+      };
+
+      state.workBranch = state.projects[projectInd].versions[versionInd].data;
+      let path = state.workPCD[payload].path.substring();
+      path = path.substring(1);
+      while(path.length) {
+        state.workBranch = state.workBranch.branch[path[0]];
+        path = path.substring(1);
+      }
+      return {
+        ...state
+      }
+    })()
     case 'INIT':
       return (() => {
         debugger

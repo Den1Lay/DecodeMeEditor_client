@@ -7,7 +7,7 @@ import classNames from 'classnames'
 import {Cascades, NavbarButton, Input, MainTextArea, MainButton, MainDataElem, Button} from '@/components'
 import {Dropdown,Menu} from 'antd'
 
-import {addProject, opedProjectCreator, selectProject, openVersionsEditor} from '@/actions'
+import {addProject, opedProjectCreator, selectProject, openVersionsEditor, selectVersion} from '@/actions'
 
 const Navbar_ProjectForm = ({addProject, onAddProject, workPCD}) => {
   function creatProjectHandl(ev) {
@@ -26,7 +26,7 @@ const Navbar_ProjectForm = ({addProject, onAddProject, workPCD}) => {
   )
 }
 
-const Navbar_Main = ({projects, opedProjectCreator, selectProject, openVersionsEditor, projectId, workVersion}) => {
+const Navbar_Main = ({projects, opedProjectCreator, selectProject, selectVersion, openVersionsEditor, projectId, workVersion}) => {
 debugger
   //const {projectId, workVersion} = workPCD || {projectId: null, workVersion: null}
   const [showProjects, setShowProjects] = useState(false);
@@ -66,20 +66,20 @@ debugger
   // }
 
   function onSelectHandl(ev) {
-    selectProject(ev.key)
+    
     //console.log('ON_SELECT_EVENT', ev)
   }
   
 
-  function makeMenu({data, addHandler, current}) {
-    let itemsArr = data.map(({name, date, superId}) => {
+  function makeMenu({data, addHandler, current, selectHandl}) { // ребилдни PCD там должен быть uuid в индикаторе версии
+    let itemsArr = data.map(({name, date, superId, comment=false}, i) => {
       return (
         <Menu.Item 
           key={superId+''} 
           className={classNames(superId === current && 'ant-menu-item-selected')}
           >
           <div style={{display: 'flex', justifyContent: 'space-between'}}>
-            <span>{name}</span>
+            <span>{comment ? comment : name}</span>
             <span>{date}</span>
           </div>
         </Menu.Item>)
@@ -93,7 +93,7 @@ debugger
           </Button>
         </div>
         <Menu 
-          onSelect={onSelectHandl}
+          onSelect={selectHandl}
           //defaultSelectedKeys={[curProjectInd]}
           > 
           {itemsArr}
@@ -107,43 +107,25 @@ debugger
     if(projects[i].superId === projectId) {
       projectInd = i;
     }
+  };
+  let versionInd = null;
+  if(projectInd !== null) {
+    for(let i in projects[projectInd].versions) {
+      if(projects[projectInd].versions[i].superId === workVersion) {
+        versionInd = i;
+      }
+    }
   }
 
   return (
     <div className='navbar__mainActions'>
-      {/* {showProjects
-        ? (<>
-        <Input
-          placeholder={'Projects name / projects'} 
-          changeHandler={projectsInputHand}
-          width={50}/>
-          <NavbarButton
-            simbol={hideDls ? "Add" : "Data"}
-            clickHandler={() => setHideDls(!hideDls)}
-            width={5.5}/></>)
-        : <NavbarButton
-            simbol={currentProject ? currentProject : "Projects name / projects"}
-            clickHandler={projectsShowHandl}
-            width={57}/>}
-        {showProjects && <Cascades 
-          dlsStatus={hideDls}
-          closeEvent={() => setShowProjects(!showProjects)}
-          onSubmitForm={projectsSubmitHandl}
-          onPickData={projectsPickHandl}
-          width={32.8} 
-          height={30} 
-          data={dataPrepare(projects)} 
-          dls={<Navbar_ProjectForm addProject={addProject} onAddProject={addProjectHandl} />} 
-          top={5.4} 
-          left={17}/>} */}
       <div className='navbar__mainActions_projects'>
         <Dropdown 
           overlay={makeMenu({
             data: projects, 
             addHandler: pickAddHandl, 
-            current: projectId})} 
-          //visible={}
-          //trigger={['click']} 
+            current: projectId,
+            selectHandl: (ev) => selectProject(ev.key)})} 
           onVisibleChange={(ev) => console.log('OnVisibleChange', ev)}>
           <div><Input place='navbar' placeholder={projects.length ? projects[projectInd].name : "Let's create some-thing" } /></div>
         </Dropdown>
@@ -154,9 +136,10 @@ debugger
          ? <Dropdown 
             overlay={makeMenu({
               data:projects[projectInd].versions , 
-              addHandler: () => openVersionsEditor(), 
-              current: projects[projectInd].lastVersion})}>
-            <div><Input place='navbar' placeholder={projects[projectInd].versions[workVersion].comment}/></div>
+              addHandler: () => openVersionsEditor(), //ребилд | пока норм..
+              current: workVersion,
+              selectHandl: (ev) => selectVersion(ev.key)})}>
+            <div><Input place='navbar' placeholder={projects[projectInd].versions[versionInd].comment}/></div>
           </Dropdown>
         : <Input place='navbar' placeholder='Nonee'/>
         }
@@ -166,14 +149,6 @@ debugger
           Map
         </Button>
       </div>
-      {/* <NavbarButton
-        simbol={"Saves"}
-        clickHandler={savesShowHandl}
-        width={25}/>
-      <NavbarButton
-        simbol={"Map"}
-        clickHandler={mapShowHandl}
-        width={15}/> */}
     </div>
   )
 }
@@ -184,4 +159,4 @@ export default connect(
     projectId: workPCD ? workPCD.projectId : null,
     workVersion: workPCD ? workPCD.workVersion : null
   }), 
-  {addProject, opedProjectCreator, selectProject, openVersionsEditor})(Navbar_Main)
+  {addProject, opedProjectCreator, selectProject, openVersionsEditor, selectVersion})(Navbar_Main)

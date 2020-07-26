@@ -25,6 +25,10 @@ export const selectProject = payload => ({
   type: "SELECT_PROJECT",
   payload
 })
+export const selectVersion = payload => ({
+  type: 'SELECT_VERSION',
+  payload
+})
 export const addVersion = payload => ({
   type: 'ADD_VERSION',
   payload

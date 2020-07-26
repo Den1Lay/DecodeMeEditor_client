@@ -4,6 +4,7 @@ export {deletePod} from './main';
 export {choosePod} from './main';
 export {opedProjectCreator} from './main';
 export {selectProject} from './main'; //
+export {selectVersion} from './main'; //
 export {addVersion} from './main'; //openVersionsEditor
 export {openVersionsEditor} from './main';
 export {savePod} from './main';
