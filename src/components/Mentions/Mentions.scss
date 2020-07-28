@@ -1,6 +1,20 @@
 @import '@/styles/variables';
 
 .realMentions {
+  ::-webkit-scrollbar {
+    width: 1.3vh !important;
+    border: none !important;
+  }
+  
+  // /* Track */
+  // ::-webkit-scrollbar-track {
+  //   background: $darkGreen; 
+  // }
+   
+  // /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: silver !important; 
+  }
   width: 100%;
   textArea {
     &::placeholder {

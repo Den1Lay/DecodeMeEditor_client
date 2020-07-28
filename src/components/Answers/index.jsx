@@ -1,7 +1,8 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
+import {connect} from 'react-redux';
 
 import { Tabs } from 'antd';
-import {Mentions, Input} from '@/components'
+import {Mentions, Input, Button} from '@/components'
 
 import './Answers.scss'
 
@@ -89,14 +90,37 @@ const { TabPane } = Tabs;
 //   }
 // }
 
-const Answers = ({onNewAnswers}) => {
-  const [tabsData, setTabsData] = useState({
-    activeKey: '0',
-    panes: [
-      { content: '', key: '0', closable: false, ref: '' },
-      { content: '', key: '1', closable: false, ref: '' },
-    ]
-  })
+
+// Проблема решается через абсолютное отключение от едитора и работой напрямую с ворк бренчем
+// Так же в эдиторе все данные будут динамически редактировать ВБ
+const Answers = ({value, setAnswers, setActiveKey}) => {
+  // const [tabsData, setTabsData] = useState({
+  //   activeKey: '0',
+  //   panes: [
+  //     { content: '', key: '0', closable: false, ref: '' },
+  //     { content: '', key: '1', closable: false, ref: '' },
+  //   ]
+  // });
+  // useEffect(() => {
+  //   console.log('RE_RENDER_ANSWERS', branch);
+  //   if(tabsData.status === 'start') {
+  //     setTabsData({...tabsData, 
+  //       panes: branch.question ? 
+  //       (() => {
+  //         let res = [],
+  //         count = branch.choseCount;
+  //         count-=1;
+  //         while(count >= 0) {
+  //           const {ans, branch: {ref}} = branch['q'+count]
+  //           res.unshift({content: ans, key: count+'', closable: false, ref: ''})
+  //         }
+  //         return res;
+  //       })()
+  //       : tabsData.panes,
+  //       status: 'work'
+  //     })
+  //   }
+  // })
   const Events = {
     addProps: function(arr) {
       return arr.map((el, i) => {
@@ -106,7 +130,7 @@ const Answers = ({onNewAnswers}) => {
       })
     },
     remove: function(targetKey) {
-      const {panes, activeKey} = tabsData;
+      const {panes, activeKey} = value;
       let newActiveKey,
       newPanes,
       workInd;
@@ -121,22 +145,23 @@ const Answers = ({onNewAnswers}) => {
       newPanes = firstPart.concat(secondPart)
 
       newPanes = this.addProps(newPanes);
-      
-      setTabsData({
+      setAnswers({
         activeKey: newActiveKey,
         panes: newPanes
       })
+      //setTabsData()
     },
     add: function () {
+      debugger
+      let panes = value.panes
       let newPanes = [...panes].concat({content: "", ref: ""});
       newPanes = this.addProps(newPanes);
-      setTabsData({panes: newPanes, activeKey: newPanes.length-1+''})
+      setAnswers({panes: newPanes, activeKey: newPanes.length-1+''})
     }
   }
 
   function changeHandl(ev) {
-    setTabsData({
-      ...tabsData,
+    setActiveKey({
       activeKey: ev
     })
   }
@@ -146,22 +171,22 @@ const Answers = ({onNewAnswers}) => {
   }
 
   function questionChangeHandl(ev) {
-    let newPanes = tabsData.panes;
-    newPanes[tabsData.activeKey].content = ev;
-    onNewAnswers(newPanes)
-    setTabsData({...tabsData, panes: newPanes})
+    let newPanes = value.panes;
+    newPanes[value.activeKey].content = ev;
+    setAnswers({...value, panes: newPanes})
   }
 
   function refChangeHandl(ev) {
     ev.persist()
 
     let refData = ev.target.value;
-    let newPanes = tabsData.panes;
-    newPanes[tabsData.activeKey].ref = refData;
-    setTabsData({...tabsData, panes: newPanes})
+    let newPanes = value.panes;
+    newPanes[value.activeKey].ref = refData;
+    setAnswers({...value,panes: newPanes })
   }
 
-  const {panes, activeKey} = tabsData;
+  const {panes, activeKey} = value;
+  debugger
   return (
     <Tabs
       type="editable-card"
@@ -174,7 +199,7 @@ const Answers = ({onNewAnswers}) => {
         <TabPane 
           tab={pane.key} 
           key={pane.key} 
-          closable={tabsData.activeKey === i+'' && pane.closable}>
+          closable={activeKey === i+'' && pane.closable}>
           {<div style={{margin: "1px"}}>
             <Mentions row={3} placeholder={'Answer..'} value={pane.content} changeHandler={questionChangeHandl}/>
             <div className='refToPod'>

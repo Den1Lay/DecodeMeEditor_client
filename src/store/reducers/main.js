@@ -61,7 +61,13 @@ const defState = {
 }
 let date = format(new Date(), "yyyy-MM-dd"); 
 export default (state = defState, action) => {
-  const {type, payload, random} = action
+  const {type, payload, random} = action;
+  function updatPersonObj() {
+    if(state.workPerson === state.personObj.userData.superId) {
+      state.personObj.projects = projects;
+      state.personObj.projectsCoordsData = state.projectsCoordsData;
+    }
+  }
   switch(type) {
   
     case 'ADD_PROJECT': 
@@ -107,10 +113,14 @@ export default (state = defState, action) => {
       }
     };
     state.projectsCoordsData = [state.workPCD].concat(state.projectsCoordsData);
+    state.workBranch = projects[0].versions[0].data;
+    state.workBranch.v = random;
+debugger
+    //ТОТ САМЫЙ ОТДЕЛЬНЫЙ ХЕНДЛЕР
+    updatPersonObj()
       return {
         ...state,
         projects,
-        workBranch: projects[0].versions[0].data,
         mainPlace: 'editor'
       }
     case 'OPEN_PROJECT_CREATOR': 
@@ -130,6 +140,12 @@ export default (state = defState, action) => {
       // пройдись с дебагером тут
       // debugger
       // delete state.workBranch;
+
+      //DEBAG SPACE
+      let testObj = {txt: "yes", obj: {insTxt: "insTxt"}, arr: ['super']};
+      let cloneFactory = FastClone.factory(testObj);
+      let testObjClone = cloneFactory(testObj)
+      //DEBAG SPACE
 
       let projectInd;
       state.projects.forEach(({superId}, i) => {
@@ -214,14 +230,28 @@ export default (state = defState, action) => {
       };
 
       const updateAnswers = () => {
+        debugger
         answers.forEach(({content, key, ref}) => {
-          realWorkBranch[key] = {
+          console.log(typeof key)
+          realWorkBranch['q'+key] = {
             ans: content,
             pos: state.workBranch.pos+key,
             branch: {
               branchDirection: '',
               base: [
-                
+                {
+                  coord: {
+                    path: state.workBranch.pos+key,
+                    height: "0"
+                  },
+                  label: '',
+                  main: '',
+                  comment: '',
+                  picture: {
+                    src: null,
+                    alt: ''
+                  }
+                }
               ], // сделать красиво
               question: false,
               choseCount: 0,
@@ -259,7 +289,7 @@ export default (state = defState, action) => {
           // Добавить уведомления о том, что поды были перемещены по нулевому ответу
           let zeroBase = realWorkBranch.base.splice(currentHeight+1);
           // переписать адресы подов в соответсвтующие
-          realWorkBranch[0].branch.base = zeroBase.map((el, i) => {
+          realWorkBranch['q0'].branch.base = zeroBase.map((el, i) => {
             return {
               ...el,
               coord: {path: el.coord.path+"0", height: i}
@@ -288,7 +318,7 @@ export default (state = defState, action) => {
         state.workPCD[state.workPCD.workVersion].height = realWorkBranch.base.length-1;
         
         for(let i = 0; i < realWorkBranch.choseCount; i++) {
-          delete realWorkBranch[i];
+          delete realWorkBranch['q'+i+''];
         }
         realWorkBranch.choseCount = 0;
         realWorkBranch.question = false;
@@ -302,6 +332,17 @@ export default (state = defState, action) => {
       }
     })()
 
+    case 'NEXT_BRANCH': 
+    //payload = 0
+    return (() => {
+      state.workBranch = state.workBranch.branch['q'+payload];
+      state.workPCD[state.workPCD.workVersion].path = state.workPCD[state.workPCD.workVersion].path+payload;
+      state.workPCD[state.workPCD.workVersion].height = "0"
+      state.workBranch.v = random;
+      return {
+        ...state
+      }
+    })()
     case 'ADD_POD': 
     return (() => {
       debugger
@@ -457,15 +498,16 @@ export default (state = defState, action) => {
     })()
     case 'INIT':
       return (() => {
-        debugger
+        debugger // РЕВОРК ! (пробелема с пустыми данными...)
+        // РЕФАКТОРИИИНГ  !!!!! !! ! (хотя бы до первого деплоя)
         console.log('%c%s', 'color: pink; font-size: 22px', "DEBUG:", payload)
         const {friends, personObj: {projects, projectsCoordsData, lastProject, lastPerson, userData: {superId}}} = payload;
         state.projects = projects;
         state.projectsCoordsData = projectsCoordsData;
-        state.friends = friends;
+        state.friends = friends
+        state.personObj = payload.personObj; // Всегда можно найти себя по этому адресу..
         //state.currentProject = lastProject;
         state.workBranch = {};
-        
         debugger
         let projectsCoordInd = null;
           for(let x=0;x<projectsCoordsData.length;x++) {
@@ -509,8 +551,53 @@ export default (state = defState, action) => {
           }
         } else {
           // поиск проекта и метаданных у другого персонажа
+          // можно добавлять в друзья, если есть хотя бы один проект
           // ДОДЕЛАТЬ С ДЕБАГЕРОМ...
+
+          // ЧТО ЕСЛИ У ЧЕЛА НЕТ ПРОЕКТОВ????
+          // ЗАСЕЙВИТЬ ГДЕ ТО данные персон обjecta;;
+
+          state.workPerson = lastPerson; // прокинут ийди человечка
+
           let friendInd = null;
+          friends.forEach(({userData: {superId}}, i) => {
+            if(lastPerson === superId) {
+              friendInd = i;
+            }
+          })
+          state.projects = friends[friendInd]; /// прокинуты проекты
+
+          let projectInd;
+          state.projects.forEach(({superId}, i) => {
+            if(lastProject === superId) {
+              projectInd = i;
+            }
+          })
+          
+          let PCDInd;
+          projectsCoordData.forEach(({projectId}, i) => {
+            if(lastProject === projectId) {
+              PCDInd = i;
+            }
+          });
+
+          state.workPCD = state.projectsCoordData[PCDInd]; // прокинуты workPCD
+
+          let versionInd;
+          state.projects[projectInd].forEach(({superId}, i) => {
+            if(superId === state.workPCD.workVersion) {
+              versionInd = i;
+            }
+          })
+          
+          state.workBranch = state.projects[projectInd].versions[versionInd]  // прокинут ворк бренч.
+          let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+
+          while(path.length) {
+            state.workBranch = state.workBranch.branch[path[0]];
+            path = path.substring[1];
+          }
+          
           // for(let k=0;k<friends.length;k++) {
           //   if(friends[k])
           // }

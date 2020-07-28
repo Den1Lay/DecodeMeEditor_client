@@ -149,6 +149,11 @@ debugger
           Map
         </Button>
       </div>
+      <div className='navbar__mainActions_secure'>
+      <Button place='navbar'>
+          SECURE
+        </Button>
+      </div>
     </div>
   )
 }
