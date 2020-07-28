@@ -8,7 +8,7 @@ export {selectVersion} from './main'; //
 export {addVersion} from './main'; //openVersionsEditor
 export {openVersionsEditor} from './main';
 export {savePod} from './main';
-export {nextBranch} from './main';
+export {changeBranch} from './main';
 
 export {fetchUserData} from './network'
 export {userLogin} from './network'

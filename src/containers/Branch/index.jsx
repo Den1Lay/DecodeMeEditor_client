@@ -2,13 +2,13 @@
 import React from 'react'
 import {connect} from 'react-redux'
 
-import {Pod} from '@/components'
+import {Pod, Button} from '@/components'
 
-import {addPod, deletePod, choosePod} from '@/actions'
+import {addPod, deletePod, choosePod, changeBranch} from '@/actions'
 
 import './Branch.scss'
 
-const Branch = ({workBranch, workPCD, v, addPod, deletePod, choosePod, currentHeight}) => {
+const Branch = ({workBranch, workPCD, v, addPod, deletePod, choosePod, currentHeight, changeBranch}) => {
   debugger
   // let currentHeight = null;
   // if(workPCD) {
@@ -34,7 +34,8 @@ const Branch = ({workBranch, workPCD, v, addPod, deletePod, choosePod, currentHe
   })
   //ebugger
   return(
-    <div className='branch' >
+    <div className='branchWrapper'>
+      <div className='branch' >
       {realResData.length > 0
       ? <div className='branch__wrapper'>
           {realResData}
@@ -42,6 +43,16 @@ const Branch = ({workBranch, workPCD, v, addPod, deletePod, choosePod, currentHe
       : <div className="branch__plug">
           Projects pods...
         </div>
+      }
+    
+      </div>
+      {
+      workBranch.pos && workBranch.pos.length > 1 &&
+      <div className='branch__goBackPlace'>
+        <div className='branch__goBackPlace_button'>
+          <Button clickHandler={() => changeBranch('back')} place='navbar'>Cross back</Button>
+        </div>
+      </div>
       }
     </div>
   )
@@ -52,4 +63,4 @@ export default connect(({main: {workBranch, workPCD}})=>({
   v: workBranch.v, 
   workPCD, 
   currentHeight: workPCD ? workPCD[workPCD.workVersion].height: null
-}), {addPod, deletePod, choosePod})(Branch);
+}), {addPod, deletePod, choosePod, changeBranch})(Branch);

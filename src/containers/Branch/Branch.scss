@@ -19,6 +19,12 @@
 // ::-webkit-scrollbar-thumb:hover {
 //   background: #555; 
 // }
+.branchWrapper {
+  flex:2;
+  height: 95.2vh;
+  display: flex;
+  flex-direction: column;
+}
 
 .branch {
   
@@ -50,5 +56,12 @@
     flex: 1;
     height: 100%;
     width: 1.3vh;
+  }
+  &__goBackPlace {
+    border-top: 1px solid $darkGreen;
+    background: $green;
+    &_button {
+      margin: 1.3vh;
+    }
   }
 }

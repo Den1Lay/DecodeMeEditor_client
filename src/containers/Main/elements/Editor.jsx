@@ -7,9 +7,9 @@ import classNames from 'classnames'
 import {Mentions, Button, Input, Answers} from '@/components'
 import {Dropdown, Menu} from 'antd'
 
-import {savePod, nextBranch} from '@/actions'
+import {savePod, changeBranch} from '@/actions'
 
-const Editor = ({savePod, workBranch, currentHeight, nextBranch}) => {
+const Editor = ({savePod, workBranch, currentHeight, changeBranch, fakeBranch, faceCH}) => {
   // проверка на сохранение...
   const [selectedType, setSelectedType] = useState('0'); // 0: POD, 1: QUESTION
   const [data, setData] = useState({
@@ -55,7 +55,7 @@ useEffect(() => {
         comment, 
         artsDesription: alt,
         answers,
-        activeKey: data.activeKey,
+        activeKey: "0",
         branchDirection: workBranch.branch.branchDirection})
         setCheckCoord({checkHeight: currentHeight, checkPath: currentPath});
       setSelectedType(currentHeight !== 'question' ? "0" : "1");
@@ -116,8 +116,10 @@ useEffect(() => {
             setAnswers={({activeKey, panes: answers}) => {setData({...data, answers, activeKey}); setSaveState(false)}} 
             setActiveKey={({activeKey}) => setData({...data, activeKey})}  
             value={{panes: answers, activeKey}}/>
-          {workBranch.branch['q'+activeKey] && saveState && <div className={classNames('editor__left_tabs_cross')}>
-            <Button clickHandler={() => {nextBranch(activeKey)}}>CROSS</Button></div>}
+          {workBranch.branch['q'+activeKey] && saveState && 
+          <div className={classNames('editor__left_tabs_cross')}>
+            <Button clickHandler={() => {changeBranch(activeKey)}}>CROSS</Button>
+          </div>}
         </div>
       </div>
 
@@ -152,4 +154,4 @@ export default connect(({main: {workBranch, workPCD}}) => ({
   workBranch, 
   v: workBranch.v,
   currentHeight: workPCD ? workPCD[workPCD.workVersion].height : null
-}), {savePod, nextBranch})(Editor)
+}), {savePod, changeBranch})(Editor)

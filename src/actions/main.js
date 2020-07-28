@@ -33,8 +33,8 @@ export const addVersion = payload => ({
   type: 'ADD_VERSION',
   payload
 })
-export const nextBranch = payload => ({
-  type: "NEXT_BRANCH",
+export const changeBranch = payload => ({
+  type: "CHANGE_BRANCH",
   payload
 })
 export const openVersionsEditor = () => ({

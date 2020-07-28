@@ -12,7 +12,7 @@ const projectsCoordData = [
     }
   }
 ]
-
+// просто манекены..
 const projects = [{
   name: "QWE",  
   description: "QWE",
@@ -64,65 +64,67 @@ export default (state = defState, action) => {
   const {type, payload, random} = action;
   function updatPersonObj() {
     if(state.workPerson === state.personObj.userData.superId) {
-      state.personObj.projects = projects;
+      state.personObj.projects = state.projects;
       state.personObj.projectsCoordsData = state.projectsCoordsData;
     }
   }
   switch(type) {
   
     case 'ADD_PROJECT': 
-    debugger
-    const {name, description} = payload
-    let projects = [{
-      name,  
-      description,
-      superId: v4(), 
-      versions: [{
-      comment: 'Init',
-      date,
-      superId: v4(),
-      data: {
-        pos: "0",
-        branch: {
-        branchDirection: '',
-        base: [{
-          coord: {
+      return (() => {
+        debugger
+        const {name, description} = payload
+        let projects = [{
+          name,  
+          description,
+          superId: v4(), 
+          versions: [{
+          comment: 'Init',
+          date,
+          superId: v4(),
+          data: {
+            pos: "0",
+            branch: {
+            branchDirection: '',
+            base: [{
+              coord: {
+                path: "0",
+                height: 0
+              },
+              label: '',
+              main: '',
+              comment: '',
+              picture: {
+                src: null,
+                alt: ''
+              }
+            }],
+            question: false,
+            choseCount: 0,
+            }
+          }
+        }]}].concat(...state.projects);
+        let firstVSId = projects[0].versions[0].superId;
+        state.workPCD = {
+          projectId: projects[0].superId,
+          workVersion: firstVSId,
+          [firstVSId]: {
             path: "0",
             height: 0
-          },
-          label: '',
-          main: '',
-          comment: '',
-          picture: {
-            src: null,
-            alt: ''
           }
-        }],
-        question: false,
-        choseCount: 0,
-        }
-      }
-    }]}].concat(...state.projects);
-    let firstVSId = projects[0].versions[0].superId;
-    state.workPCD = {
-      projectId: projects[0].superId,
-      workVersion: firstVSId,
-      [firstVSId]: {
-        path: "0",
-        height: 0
-      }
-    };
-    state.projectsCoordsData = [state.workPCD].concat(state.projectsCoordsData);
-    state.workBranch = projects[0].versions[0].data;
-    state.workBranch.v = random;
-debugger
-    //ТОТ САМЫЙ ОТДЕЛЬНЫЙ ХЕНДЛЕР
-    updatPersonObj()
-      return {
-        ...state,
-        projects,
-        mainPlace: 'editor'
-      }
+        };
+        state.projectsCoordsData = [state.workPCD].concat(state.projectsCoordsData);
+        state.workBranch = projects[0].versions[0].data;
+        state.workBranch.v = random;
+        debugger
+        //ТОТ САМЫЙ ОТДЕЛЬНЫЙ ХЕНДЛЕР
+        updatPersonObj()
+          return {
+            ...state,
+            projects,
+            mainPlace: 'editor'
+          }
+      })()
     case 'OPEN_PROJECT_CREATOR': 
       return {
         ...state,
@@ -189,11 +191,10 @@ debugger
       state.workPCD = state.projectsCoordsData[PCDInd];
 
       let newWorkBranch = state.projects[projectInd].versions[state.projects[projectInd].versions.length-1].data; 
-      let path = state.workPCD[state.workPCD.workVersion].path.substring();
-      path = path.substring(1);
+      let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
       while(path.length) {
-        newWorkBranch = newWorkBranch.branch[path[0]];
-        path = path.substr(1);
+        newWorkBranch = newWorkBranch.branch['q'+path[0]];
+        path = path.substring(1);
       };
 
       newWorkBranch.v = random
@@ -330,19 +331,54 @@ debugger
       return {
         ...state
       }
-    })()
+    })();
 
-    case 'NEXT_BRANCH': 
+    case 'CHANGE_BRANCH': 
     //payload = 0
+    debugger
     return (() => {
-      state.workBranch = state.workBranch.branch['q'+payload];
-      state.workPCD[state.workPCD.workVersion].path = state.workPCD[state.workPCD.workVersion].path+payload;
-      state.workPCD[state.workPCD.workVersion].height = "0"
+      if(payload === 'back') {
+        let path = state.workPCD[state.workPCD.workVersion].path;
+        state.workPCD[state.workPCD.workVersion].path = path.substring(0, path.length-1);
+        state.workPCD[state.workPCD.workVersion].height = "question";
+        
+        let projectInd;
+        for(let i in state.projects) {
+          if(state.workPCD.projectId === state.projects[i].superId) {
+            projectInd = i;
+          }
+        };
+        let versionInd;
+        for(let i in state.projects[projectInd].versions) {
+          if(state.workPCD.workVersion === state.projects[projectInd].versions[i].superId) {
+            versionInd = i;
+          }
+        }
+        state.workBranch = state.projects[projectInd].versions[versionInd].data;
+        let workPath = state.workPCD[state.workPCD.workVersion].path.substring(1);
+        while(workPath) {
+          state.workBranch = state.workBranch.branch['q'+workPath[0]];
+          workPath = workPath.substring(1);
+        };
+        if(state.workBranch.branch.base.length) {
+          state.workPCD[state.workPCD.workVersion].height = '0'
+        }
+
+      } else {
+        state.workBranch = state.workBranch.branch['q'+payload];
+        state.workPCD[state.workPCD.workVersion].path = state.workPCD[state.workPCD.workVersion].path+payload;
+        state.workPCD[state.workPCD.workVersion].height = "question";
+        if(state.workBranch.branch.base.length) {
+          state.workPCD[state.workPCD.workVersion].height = "0";
+        }
+        
+      }
+      
       state.workBranch.v = random;
       return {
         ...state
       }
-    })()
+    })();
     case 'ADD_POD': 
     return (() => {
       debugger
@@ -350,12 +386,12 @@ debugger
         // создание нового элемента и переадресация процесса на него
         let realWorkBranch = state.workBranch.branch;
         if(payload !== 'question') {
-          let firstPart = realWorkBranch.base.slice(0, payload+1);
-          let secondPart = realWorkBranch.base.slice(payload+1);
+          let firstPart = realWorkBranch.base.slice(0, +payload+1);
+          let secondPart = realWorkBranch.base.slice(+payload+1);
           realWorkBranch.base = [...firstPart, {
             coord: {
               path: state.workBranch.pos,
-              height: payload+1
+              height: +payload+1
             },
             label: '',
             main: '',
@@ -366,9 +402,9 @@ debugger
             }
           }].concat(secondPart.map((data) => {
             const {path, height} = data.coord
-            return {...data, coord: {path, height: height+1}}
+            return {...data, coord: {path, height: +height+1}}
           }));
-          state.workPCD[state.workPCD.workVersion].height = payload+1;
+          state.workPCD[state.workPCD.workVersion].height = +payload+1;
       } else {
           realWorkBranch.base = [...realWorkBranch.base, {
             coord: {
@@ -457,7 +493,7 @@ debugger
       let workPath = state.workPCD[state.workPCD.workVersion].path.substring();
       workPath = workPath.substring(1);
       while (workPath.length) {
-        state.workBranch = state.workBranch.branch[workPath[0]];
+        state.workBranch = state.workBranch.branch['q'+workPath[0]];
         workPath = workPath.substring(1);
       };
       state.workBranch.v = random;
@@ -489,7 +525,7 @@ debugger
       let path = state.workPCD[payload].path.substring();
       path = path.substring(1);
       while(path.length) {
-        state.workBranch = state.workBranch.branch[path[0]];
+        state.workBranch = state.workBranch.branch['q'+path[0]];
         path = path.substring(1);
       }
       return {
@@ -534,7 +570,7 @@ debugger
 
             path = path.substr(1);
             while(path.length) {
-              workBranch = workBranch.branch[path[0]];
+              workBranch = workBranch.branch['q'+path[0]];
               path = path.substr(1)
             }
             state.workBranch.branch = workBranch;
@@ -575,7 +611,7 @@ debugger
           })
           
           let PCDInd;
-          projectsCoordData.forEach(({projectId}, i) => {
+          state.projectsCoordData.forEach(({projectId}, i) => {
             if(lastProject === projectId) {
               PCDInd = i;
             }
@@ -594,8 +630,8 @@ debugger
           let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
 
           while(path.length) {
-            state.workBranch = state.workBranch.branch[path[0]];
-            path = path.substring[1];
+            state.workBranch = state.workBranch.branch['q'+path[0]];
+            path = path.substring(1);
           }
           
           // for(let k=0;k<friends.length;k++) {
