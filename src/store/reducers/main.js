@@ -48,14 +48,15 @@ const projects = [{
 const defState = {
   projectsCoordsData: [],
   projects: false,
-  //currentBranch: "0",
-  //currentProject: 0,
+  // currentBranch: "0",
+  // currentProject: 0,
   // currentVersion: 0,
   // currentHeight: 0,
   // workProject: 0,
   workPerson: null,
   workPCD: null,
   workBranch: null,
+  personObj: null, // Всегда можно найти себя по этому адресу..
   friends: [],
   mainPlace: 'editor', // project save
 }
@@ -70,7 +71,7 @@ export default (state = defState, action) => {
   }
   switch(type) {
   
-    case 'ADD_PROJECT': 
+    case 'ADD_PROJECT': //wb.v
       return (() => {
         debugger
         const {name, description} = payload
@@ -78,6 +79,8 @@ export default (state = defState, action) => {
           name,  
           description,
           superId: v4(), 
+          access: [state.personObj.userData.superId],
+          superAccess: [state.personObj.userData.superId],
           versions: [{
           comment: 'Init',
           date,
@@ -115,7 +118,7 @@ export default (state = defState, action) => {
         };
         state.projectsCoordsData = [state.workPCD].concat(state.projectsCoordsData);
         state.workBranch = projects[0].versions[0].data;
-        state.workBranch.v = random;
+        state.workBranch.v = 'n'+random;
         debugger
         //ТОТ САМЫЙ ОТДЕЛЬНЫЙ ХЕНДЛЕР
         updatPersonObj()
@@ -197,14 +200,14 @@ export default (state = defState, action) => {
         path = path.substring(1);
       };
 
-      newWorkBranch.v = random
+      newWorkBranch.v = 'v'+random
       return {
         ...state,
         workBranch: newWorkBranch,
         mainPlace: 'editor'
       }
     })()
-    case 'SAVE_POD': 
+    case 'SAVE_POD': //wb.v
    
     return (() => {
       debugger
@@ -327,13 +330,13 @@ export default (state = defState, action) => {
         //создать ПОД по максимальной высоте и ликвидировать вопрос с ответами.
       }
       state.workBranch.branch.branchDirection = branchDirection;
-      state.workBranch.v = Math.random(); // события по обработчику
+      state.workBranch.v = 'p'+random; // события по обработчику
       return {
         ...state
       }
     })();
 
-    case 'CHANGE_BRANCH': 
+    case 'CHANGE_BRANCH': //wb.v--
     //payload = 0
     debugger
     return (() => {
@@ -374,12 +377,12 @@ export default (state = defState, action) => {
         
       }
       
-      state.workBranch.v = random;
+      state.workBranch.v = 'c'+random;
       return {
         ...state
       }
     })();
-    case 'ADD_POD': 
+    case 'ADD_POD': //wb.v
     return (() => {
       debugger
       console.log(payload)
@@ -422,19 +425,21 @@ export default (state = defState, action) => {
           state.workPCD[state.workPCD.workVersion].height = realWorkBranch.base.length-1;
         }
         
-        state.workBranch.v = Math.random();
+        state.workBranch.v = 'p'+random;
       return {
         ...state
       }
     })()
     case 'CHOOSE_POD': 
     return (() => {
-      state.workPCD[state.workPCD.workVersion].height = payload
+      state.workPCD[state.workPCD.workVersion].height = payload;
+      state.mainPlace = 'editor';
+      state.workBranch.v = 'c'+random
       return {
         ...state
       }
     })()
-    case "DELETE_POD":
+    case "DELETE_POD": //wb.v
     return (() => {
       debugger
       console.log(payload)
@@ -458,7 +463,7 @@ export default (state = defState, action) => {
         }
       }
       state.workPCD[state.workPCD.workVersion].height = newCurrentHeight;
-      state.workBranch.v = Math.random();
+      state.workBranch.v = 'p'+random;
       return {
         ...state
       }
@@ -496,7 +501,7 @@ export default (state = defState, action) => {
         state.workBranch = state.workBranch.branch['q'+workPath[0]];
         workPath = workPath.substring(1);
       };
-      state.workBranch.v = random;
+      state.workBranch.v = 'c'+random;
       return {
         ...state,
       }
@@ -528,6 +533,7 @@ export default (state = defState, action) => {
         state.workBranch = state.workBranch.branch['q'+path[0]];
         path = path.substring(1);
       }
+      state.workBranch.v = 'c'+random
       return {
         ...state
       }
@@ -547,7 +553,7 @@ export default (state = defState, action) => {
         debugger
         let projectsCoordInd = null;
           for(let x=0;x<projectsCoordsData.length;x++) {
-            if(projectsCoordsData[x].superId === lastProject) {
+            if(projectsCoordsData[x].projectId === lastProject) {
               projectsCoordInd = x;
             }
           }
@@ -562,19 +568,25 @@ export default (state = defState, action) => {
           if(projectsCoordInd !== null) {
             // Уже есть проект 
             let pcd = projectsCoordsData[projectsCoordInd]
-            let version = pcd.lastVersion;
-            let {path, height} = pcd[version].coord;
+            let version = pcd.workVersion;
+            let {path, height} = pcd[version];
 
-            let workVersion = projects[lockInd].versions[version];
-            let workBranch = workVersion.data;
-
-            path = path.substr(1);
-            while(path.length) {
-              workBranch = workBranch.branch['q'+path[0]];
-              path = path.substr(1)
+            let versionInd;
+            for(let i in projects[lockInd].versions) {
+              if(version === projects[lockInd].versions[i].superId) {
+                versionInd = i;
+              }
             }
-            state.workBranch.branch = workBranch;
-            state.workPCD = state.projectsCoordData[projectsCoordInd];
+
+            let workVersion = projects[lockInd].versions[versionInd];
+            state.workBranch = workVersion.data;
+
+            path = path.substring(1);
+            while(path.length) {
+              state.workBranch = state.workBranch.branch['q'+path[0]];
+              path = path.substring(1)
+            }
+            state.workPCD = state.projectsCoordsData[projectsCoordInd];
             //state.workVersion = workVersion;
             state.workPerson = superId;
             //state.currentHeight = height;

@@ -8,6 +8,7 @@ import {Branch, Notes, Main, Navbar, Map, Login} from '@/containers'
 import './Base.scss';
 
 const Base = ({projects}) => {
+  debugger
   console.log('DEBUG', projects)
 
   return(
