@@ -19,6 +19,23 @@
 //   border: 1px solid $grey !important;
 // }
 
+.item {
+  &-enter {
+    opacity: 0;
+  }
+  &-enter-active {
+    opacity: 1;
+    transition: opacity 1500 ease-in;
+  }
+  &-exit {
+    opacity: 1;
+  }
+  &-exit-active {
+    opacity: 0;
+    transition: opacity 1500 ease-in;
+  }
+}
+
 .main {
   flex: 9;
   position: relative;
@@ -88,6 +105,9 @@
     }
   }
   }
+  .setup {
+    @include vision;
+  }
   .project {
     position: absolute;
     width: 100%;
@@ -111,6 +131,12 @@
     &__bottomPart {
       &_description {
         margin: 0 1.3vh;
+      }
+      &_access {
+        margin: 1.3vh 1.3vh 0 1.3vh;
+        p {
+          line-height: 3vh;
+        }
       }
     }
   }
@@ -140,5 +166,61 @@
     justify-content: center;
     margin-top: 3vh;
     @include vision;
+  }
+  .social {
+    position: absolute;
+    width: 100%;
+    @include vision;
+    &__chusedUser {
+      &--WRAPPER{
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+      }
+      margin: 1.3vh 1.3vh 0 1.3vh;
+      width: fit-content; //56.3vw; fullWorkPlace
+      min-height: 7vh;
+      border: 1px solid $grey;
+      display: flex;
+      //justify-content: center;
+      align-items: center;
+      &_plug {
+        margin: 1.3vh;
+        color: $grey
+      }
+      &_showProfile {
+        &_avatar {
+          margin: 1.3vh;
+          &_plug {
+            margin: 1.3vh;
+            border: 1px solid $grey;
+            border-radius: 50%;
+            width: 4vh;
+            height: 4vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+        }
+      }
+      &_chuseProfile {
+        margin-right: 1.3vh;;
+      }
+      &_addToFriend {
+        max-height: 4vh;
+      }
+      &_projectCount {
+        margin: 0 1.3vh;
+      }
+    }
+    &__findUser {
+      width: 30vw;
+      margin: 1.3vh;
+    }
+    &__findFriend {
+      width: 30vw;
+      margin: 0 1.3vh 1.3vh 1.3vh
+    }
   }
 }

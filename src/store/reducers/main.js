@@ -13,6 +13,7 @@ const projectsCoordData = [
   }
 ]
 // просто манекены..
+// обновлять персон обжект здесь или получать новый с сервера... (я беру с сервера..) ..почистить код
 const projects = [{
   name: "QWE",  
   description: "QWE",
@@ -46,16 +47,17 @@ const projects = [{
 }]}]
 
 const defState = {
-  projectsCoordsData: [],
+  projectsCoordsData: [], // набор джентельмена
   projects: false,
+  workPerson: null,
+  workPCD: null,
+  workBranch: null,
   // currentBranch: "0",
   // currentProject: 0,
   // currentVersion: 0,
   // currentHeight: 0,
   // workProject: 0,
-  workPerson: null,
-  workPCD: null,
-  workBranch: null,
+  users: [], // all exist users
   personObj: null, // Всегда можно найти себя по этому адресу..
   friends: [],
   mainPlace: 'editor', // project save
@@ -74,13 +76,13 @@ export default (state = defState, action) => {
     case 'ADD_PROJECT': //wb.v
       return (() => {
         debugger
-        const {name, description} = payload
-        let projects = [{
+        const {name, description, access, superAccess} = payload
+        state.projects.unshift({
           name,  
           description,
           superId: v4(), 
-          access: [state.personObj.userData.superId],
-          superAccess: [state.personObj.userData.superId],
+          access,
+          superAccess,
           versions: [{
           comment: 'Init',
           date,
@@ -92,7 +94,7 @@ export default (state = defState, action) => {
             base: [{
               coord: {
                 path: "0",
-                height: 0
+                height: "0"
               },
               label: '',
               main: '',
@@ -106,41 +108,90 @@ export default (state = defState, action) => {
             choseCount: 0,
             }
           }
-        }]}].concat(...state.projects);
-        let firstVSId = projects[0].versions[0].superId;
+        }]});
+        let firstVSId = state.projects[0].versions[0].superId;
         state.workPCD = {
-          projectId: projects[0].superId,
+          projectId: state.projects[0].superId,
           workVersion: firstVSId,
           [firstVSId]: {
             path: "0",
-            height: 0
+            height: "0"
           }
         };
         state.projectsCoordsData = [state.workPCD].concat(state.projectsCoordsData);
-        state.workBranch = projects[0].versions[0].data;
+        state.workBranch = state.projects[0].versions[0].data;
+        state.personObj.userData.myLastProject = state.projects[0].superId;
+        state.mainPlace = 'editor';
         state.workBranch.v = 'n'+random;
-        debugger
+
         //ТОТ САМЫЙ ОТДЕЛЬНЫЙ ХЕНДЛЕР
-        updatPersonObj()
+        //updatPersonObj()
           return {
             ...state,
-            projects,
-            mainPlace: 'editor'
           }
+      })();
+    case 'SETUP_PROJECT':
+      debugger
+      return (() => {
+        console.log(payload)
+        const {name, description, access, superAccess} = payload
+
+        let projectInd;
+        for(let i in state.projects) {
+          if(state.projects[i].superId === state.workPCD.projectId) {
+            projectInd = i;
+          }
+        };
+        function checkId(source, target, store) {
+          source.forEach(id => {
+            if(!target.includes(id)) {
+              store.push(id)
+            }
+          })
+        }
+        let kicked = [];
+        let superKicked = [];
+        let newObservers = [];
+        let newEditord = [];
+        checkId(state.projects[projectInd].access, access, kicked);
+        checkId(state.projects[projectInd].superAccess, superAccess, superKicked);
+        checkId(access, state.projects[projectInd].access, newObservers);
+        checkId(superAccess, state.projects[projectInd].superAccess, newEditord);
+       
+        state.projects[projectInd] = {...state.projects[projectInd], name, description, access, superAccess};
+        state.workBranch.v = 's'+random;
+        state.mainPlace = 'editor';
+
+        return {
+          ...state,
+          kicked,
+          superKicked,
+          newObservers,
+          newEditord
+        }
       })()
-    case 'OPEN_PROJECT_CREATOR': 
+    case 'OPEN_PLACE': 
       return {
         ...state,
-        mainPlace: 'project'
+        mainPlace: payload
       }
-    case 'OPEN_VERSIONS_EDITOR':  //openVersionsEditor
-      return {
-        ...state,
-        mainPlace: 'version'
-      }
+    // case 'OPEN_PROJECT_CREATOR': 
+    //   return {
+    //     ...state,
+    //     mainPlace: 'project'
+    //   }
+    // case 'OPEN_VERSIONS_EDITOR':  //openVersionsEditor
+    //   return {
+    //     ...state,
+    //     mainPlace: 'version'
+    //   }
+    // case 'OPEN_PROJECT_SETUP': 
+    //   return {
+    //     ...state, 
+    //     mainPlace: 'setup'
+    //   }
     case 'ADD_VERSION':
     // допилить кода сюда и коммитнуть
-    debugger
     return (() => {
       // пройдись с дебагером тут
       // debugger
@@ -210,8 +261,8 @@ export default (state = defState, action) => {
     case 'SAVE_POD': //wb.v
    
     return (() => {
-      debugger
-      console.log('PAYLOD:', payload)
+      
+      console.log('PAYLOD:', payload);
       const {data: {label, mainPart, comment, artsDesription, branchDirection, answers}, selectedType} = payload;
       
       let realWorkBranch = state.workBranch.branch;
@@ -338,7 +389,7 @@ export default (state = defState, action) => {
 
     case 'CHANGE_BRANCH': //wb.v--
     //payload = 0
-    debugger
+    
     return (() => {
       if(payload === 'back') {
         let path = state.workPCD[state.workPCD.workVersion].path;
@@ -384,7 +435,7 @@ export default (state = defState, action) => {
     })();
     case 'ADD_POD': //wb.v
     return (() => {
-      debugger
+      
       console.log(payload)
         // создание нового элемента и переадресация процесса на него
         let realWorkBranch = state.workBranch.branch;
@@ -441,13 +492,13 @@ export default (state = defState, action) => {
     })()
     case "DELETE_POD": //wb.v
     return (() => {
-      debugger
+      
       console.log(payload)
       let realWorkBranch = state.workBranch.branch;
       let newCurrentHeight;
       if(payload === 'question') {
         for(let i = 0; i < realWorkBranch.choseCount; i++) {
-          delete realWorkBranch[i]
+          delete realWorkBranch['q'+i]
         }
         realWorkBranch.choseCount = 0;
         realWorkBranch.question = false;
@@ -469,9 +520,20 @@ export default (state = defState, action) => {
       }
     })()
     case 'SELECT_PROJECT': 
-    debugger
     console.log(payload)
     return (() => {
+      if(state.personObj.userData.superId !== state.workPerson) {
+        let workFriendInd;
+        for(let i in state.personObj.userData.friends) {
+          if(state.personObj.userData.friends[i].superId === state.workPerson) {
+            workFriendInd = i;
+          }
+        };
+        state.personObj.userData.friends[workFriendInd].lastProject = payload;
+      } else {
+        state.personObj.userData.myLastProject = payload;
+      };
+
       let PCDInd;
       state.projectsCoordsData.forEach(({projectId}, i) => {
         if(payload === projectId) {
@@ -485,6 +547,13 @@ export default (state = defState, action) => {
           projectInd = i;
         }
       })
+      if(PCDInd === undefined) { // работает при пике проекта у друга
+        // add new project in PCD;
+        let firstVersionId = state.projects[projectInd].versions[0].superId;
+        let workHeight = state.projects[projectInd].versions[0].data.branch.base.length ? "0" : "question";
+        state.projectsCoordsData.push({projectId: payload, workVersion: firstVersionId, [firstVersionId]: {path: "0", height: workHeight}})
+        PCDInd = state.projectsCoordsData.length-1;
+      }
 
       state.workPCD = state.projectsCoordsData[PCDInd]; 
       let versionInd;
@@ -508,7 +577,6 @@ export default (state = defState, action) => {
     })()
     case 'SELECT_VERSION': 
     return (() => {
-      debugger
       console.log('payload');
       state.workPCD.workVersion = payload;
 
@@ -527,8 +595,7 @@ export default (state = defState, action) => {
       };
 
       state.workBranch = state.projects[projectInd].versions[versionInd].data;
-      let path = state.workPCD[payload].path.substring();
-      path = path.substring(1);
+      let path = state.workPCD[payload].path.substring(1);
       while(path.length) {
         state.workBranch = state.workBranch.branch['q'+path[0]];
         path = path.substring(1);
@@ -537,20 +604,104 @@ export default (state = defState, action) => {
       return {
         ...state
       }
+    })();
+    case 'NEW_FRIEND_REQUEST': 
+    return (() => {
+      //payload = user || obj.userData
+      state.personObj.userData.addToComrade.push(payload);
+      return {
+        ...state
+      }
     })()
+    case 'PREVIEW_PERSON': 
+    return (() => {
+      console.log("PREVIEW_PERSON: ", payload) 
+         // payload = {userData, projects, }
+      const {projects, userData} = payload;
+      state.projects = projects;
+      state.workPerson = userData.superId;
+      state.workBranch = projects[0].versions[0].data;
+      let versionId = projects[0].versions[0].superId;
+      state.workPCD = {
+        projectId: projects[0].superId, 
+        workVersion: versionId,
+        [versionId]: {path: "0", height: "0"}
+      }
+   
+      return state
+    })()
+    case 'CHOOSE_PERSON':
+      // будут ли происходить изменения в друзьях при модифировании 
+      return (() => {
+        //payload === superId [friend]
+        // ОБРАБОТАТЬ ВСЕ ИСКЛЮЧЕНИЯ...
+        let friendInd;
+        for(let i in state.friends) {
+          if(state.friends[i].userData.superId === payload) {
+            friendInd = i;
+          }
+        }
+        state.projects = state.friends[friendInd].projects;
+
+        let deepFriendInd;
+        for(let i in state.personObj.userData.friends) {
+          if(state.personObj.userData.friends[i].superId === payload) {
+            deepFriendInd = i;
+          }
+        }
+        // friends last project....
+        let lastMyProjectInFriend = state.personObj.userData.friends[deepFriendInd].lastProject;
+        if(lastMyProjectInFriend !== null) {
+          // чекнуть исключения на удаленный проект
+          let PCDInd;
+          for(let i in state.projectsCoordsData) {
+            if(state.projectsCoordsData[i].projectId === lastMyProjectInFriend) {
+              PCDInd = i;
+            }
+          };
+
+          state.workPCD = state.projectsCoordData[PCDInd];
+
+          let projectInd; 
+          for(let i in state.projects) {
+            if(state.projects[i].superId === state.workPCD.projectId) {
+              projectInd = i;
+            }
+          };
+
+          let versionInd;
+          for(let i in state.projects[projectInd].versions) {
+            if(state.projects[projectInd].versions[i] === state.workPCD.workVersion) {
+              versionInd = i;
+            }
+          }
+          state.workBranch = state.projects[projectInd].versions[versionInd].data;
+
+        } else {
+          state.workPCD = null;
+          state.workBranch.branch = {};
+          state.mainPlace = 'choose'
+        }
+        state.workPerson = payload;
+        state.workBranch.v = 'f'+random;
+        return {
+          ...state
+        }
+      })()
     case 'INIT':
       return (() => {
-        debugger // РЕВОРК ! (пробелема с пустыми данными...)
+        // РЕВОРК ! (пробелема с пустыми данными...)
         // РЕФАКТОРИИИНГ  !!!!! !! ! (хотя бы до первого деплоя)
         console.log('%c%s', 'color: pink; font-size: 22px', "DEBUG:", payload)
         const {friends, personObj: {projects, projectsCoordsData, lastProject, lastPerson, userData: {superId}}} = payload;
-        state.projects = projects;
-        state.projectsCoordsData = projectsCoordsData;
+        state.personObj = payload.personObj
+        //state.projects = projects;
+        state.projectsCoordsData = state.personObj.projectsCoordsData;
         state.friends = friends
-        state.personObj = payload.personObj; // Всегда можно найти себя по этому адресу..
+        // Всегда можно найти себя по этому адресу..
         //state.currentProject = lastProject;
         state.workBranch = {};
-        debugger
+      
         let projectsCoordInd = null;
           for(let x=0;x<projectsCoordsData.length;x++) {
             if(projectsCoordsData[x].projectId === lastProject) {
@@ -559,32 +710,34 @@ export default (state = defState, action) => {
           }
 
         if(lastPerson === superId) {
+          ///
+          state.projects = state.personObj.projects
+          ///
           let lockInd = null;
           for(let i=0;i<projects.length;i++) {
             if(projects[i].superId === lastProject) {
-              lockInd = i
+              lockInd = i;
             }
           }
           if(projectsCoordInd !== null) {
             // Уже есть проект 
-            let pcd = projectsCoordsData[projectsCoordInd]
+            let pcd = projectsCoordsData[projectsCoordInd];
             let version = pcd.workVersion;
             let {path, height} = pcd[version];
 
             let versionInd;
-            for(let i in projects[lockInd].versions) {
-              if(version === projects[lockInd].versions[i].superId) {
+            for(let i in state.projects[lockInd].versions) {
+              if(version === state.projects[lockInd].versions[i].superId) {
                 versionInd = i;
               }
             }
 
-            let workVersion = projects[lockInd].versions[versionInd];
-            state.workBranch = workVersion.data;
+            state.workBranch = state.projects[lockInd].versions[versionInd].data;
 
             path = path.substring(1);
             while(path.length) {
               state.workBranch = state.workBranch.branch['q'+path[0]];
-              path = path.substring(1)
+              path = path.substring(1);
             }
             state.workPCD = state.projectsCoordsData[projectsCoordInd];
             //state.workVersion = workVersion;
@@ -604,7 +757,7 @@ export default (state = defState, action) => {
 
           // ЧТО ЕСЛИ У ЧЕЛА НЕТ ПРОЕКТОВ????
           // ЗАСЕЙВИТЬ ГДЕ ТО данные персон обjecta;;
-
+          // все норм, только нужно хендлить пустые проекты 
           state.workPerson = lastPerson; // прокинут ийди человечка
 
           let friendInd = null;
@@ -613,7 +766,7 @@ export default (state = defState, action) => {
               friendInd = i;
             }
           })
-          state.projects = friends[friendInd]; /// прокинуты проекты
+          state.projects = state.friends[friendInd]; /// прокинуты проекты
 
           let projectInd;
           state.projects.forEach(({superId}, i) => {
@@ -622,14 +775,14 @@ export default (state = defState, action) => {
             }
           })
           
-          let PCDInd;
-          state.projectsCoordData.forEach(({projectId}, i) => {
-            if(lastProject === projectId) {
-              PCDInd = i;
-            }
-          });
+          // let PCDInd;
+          // state.projectsCoordData.forEach(({projectId}, i) => {
+          //   if(lastProject === projectId) {
+          //     PCDInd = i;
+          //   }
+          // });
 
-          state.workPCD = state.projectsCoordData[PCDInd]; // прокинуты workPCD
+          state.workPCD = state.projectsCoordData[projectsCoordInd]; // прокинуты workPCD
 
           let versionInd;
           state.projects[projectInd].forEach(({superId}, i) => {
@@ -638,7 +791,7 @@ export default (state = defState, action) => {
             }
           })
           
-          state.workBranch = state.projects[projectInd].versions[versionInd]  // прокинут ворк бренч.
+          state.workBranch = state.projects[projectInd].versions[versionInd].data  // прокинут ворк бренч.
           let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
 
           while(path.length) {

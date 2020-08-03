@@ -4,29 +4,20 @@ import React, {useState} from 'react'
 import {connect} from 'react-redux'
 import classNames from 'classnames'
 
-import {Cascades, NavbarButton, Input, MainTextArea, MainButton, MainDataElem, Button} from '@/components'
+import {Input, Button} from '@/components'
 import {Dropdown,Menu} from 'antd'
 
-import {addProject, opedProjectCreator, selectProject, openVersionsEditor, selectVersion} from '@/actions'
+import {addProject, openPlace, selectProject, selectVersion} from '@/actions'
 
-const Navbar_ProjectForm = ({addProject, onAddProject, workPCD}) => {
-  function creatProjectHandl(ev) {
-    ev.preventDefault();
-    ev.persist();
-    console.log("SUBMIT_EV:", ev.target[0].value)
-    addProject(ev.target[0].value);
-    onAddProject()
-  }
-
-  return ( //32.8
-    <form onSubmit={creatProjectHandl} className='projectForm'>
-      <MainTextArea width={24.9} height={1.9} /> 
-      <MainButton width={7.7} height={2.55} type={'submit'} simbol={"CREATE"}/>
-    </form>
-  )
-}
-
-const Navbar_Main = ({projects, opedProjectCreator, selectProject, selectVersion, openVersionsEditor, projectId, workVersion}) => {
+const Navbar_Main = (
+  {
+    projects, 
+    selectProject, 
+    selectVersion, 
+    projectId, 
+    workVersion,
+    openPlace
+  }) => {
 debugger
   //const {projectId, workVersion} = workPCD || {projectId: null, workVersion: null}
   const [showProjects, setShowProjects] = useState(false);
@@ -55,10 +46,6 @@ debugger
     console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
   }
 
-
-  function pickAddHandl(ev) {
-    opedProjectCreator()
-  }
 
   // function pickElemHandl(ev) {
   //   let key = ev.key;
@@ -123,7 +110,7 @@ debugger
         <Dropdown 
           overlay={makeMenu({
             data: projects, 
-            addHandler: pickAddHandl, 
+            addHandler: () => openPlace('project'), 
             current: projectId,
             selectHandl: (ev) => selectProject(ev.key)})} 
           onVisibleChange={(ev) => console.log('OnVisibleChange', ev)}>
@@ -136,7 +123,7 @@ debugger
          ? <Dropdown 
             overlay={makeMenu({
               data:projects[projectInd].versions , 
-              addHandler: () => openVersionsEditor(), //ребилд | пока норм..
+              addHandler: () => openPlace('version'), //ребилд | пока норм..
               current: workVersion,
               selectHandl: (ev) => selectVersion(ev.key)})}>
             <div><Input place='navbar' placeholder={projects[projectInd].versions[versionInd].comment}/></div>
@@ -144,24 +131,26 @@ debugger
         : <Input place='navbar' placeholder='Nonee'/>
         }
       </div>
+      <div className='navbar__mainActions_secure'>
+        <Button place='navbar' clickHandler={() => openPlace('setup')}>
+          Setup
+        </Button>
+      </div>
       <div className='navbar__mainActions_map'>
         <Button place='navbar'>
           Map
         </Button>
       </div>
-      <div className='navbar__mainActions_secure'>
-      <Button place='navbar'>
-          SECURE
-        </Button>
-      </div>
+      
     </div>
   )
 }
 //
 export default connect(
-  ({main: {demo_projects, projects, workPCD}})=>({
+  ({main: {demo_projects, projects, workPCD, workBranch}})=>({
     projects,
     projectId: workPCD ? workPCD.projectId : null,
-    workVersion: workPCD ? workPCD.workVersion : null
+    workVersion: workPCD ? workPCD.workVersion : null,
+    v: workBranch.v
   }), 
-  {addProject, opedProjectCreator, selectProject, openVersionsEditor, selectVersion})(Navbar_Main)
+  {addProject, openPlace, selectProject, selectVersion})(Navbar_Main)

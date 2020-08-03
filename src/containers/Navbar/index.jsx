@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {lazy} from 'react'
 import {connect} from 'react-redux'
 
 import {Navbar_Branch, Navbar_Main, Navbar_Social} from './elements'

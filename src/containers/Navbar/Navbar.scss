@@ -34,15 +34,45 @@
     &_saves {
       @include navbarsElems(4, 0 1.3vh 0 0)
     }
-    &_map {
+    &_secure {
       @include navbarsElems(1, 0 1.3vh 0 0)
     }
-    &_secure {
+    &_map {
       @include navbarsElems(1, 0)
     }
+    
   }
   &__social {
     @include flexNavbar(5.2);
+    &_fastAccess {
+      @include navbarsElems(10, 0 1.3vh 0 1.3vh);
+      color: $light
+    }
+    &_details {
+      @include navbarsElems(2, 0 1.3vh 0 0)
+    }
+    &_me {
+      @include navbarsElems(1, 0 1.3vh 0 0);
+      &_avatar {
+        &_alt {
+          width: 3.7vh;
+          height: 3.7vh;
+          border: 1px solid $light;
+          color: $light;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 50%;
+          box-shadow: none;
+          transition: 0.3s ease-in-out;
+          cursor: pointer;
+          &:hover {
+            transition: 0.3s ease-in-out;
+            box-shadow: 0 0 3px 1px $light
+          }
+        }
+      }
+    }
   }
 }
 .cascades {
