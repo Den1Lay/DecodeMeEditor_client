@@ -43,7 +43,7 @@
     position: absolute;
     display: flex;
     width: 100%;
-    @include vision;
+   @include vision;
 
     &__left {
     flex: 9;
@@ -170,6 +170,8 @@
   .social {
     position: absolute;
     width: 100%;
+    display: flex;
+    flex-direction: column;
     @include vision;
     &__chusedUser {
       &--WRAPPER{
@@ -221,6 +223,19 @@
     &__findFriend {
       width: 30vw;
       margin: 0 1.3vh 1.3vh 1.3vh
+    }
+
+    &__requestToFriend {
+      margin: 0 1.3vh 1.3vh 1.3vh;
+      border: 1px solid $grey;
+      width:  30vw;
+      &_list {
+        //
+      }
+      &_plug {
+        margin: 1.3vh;
+        color: $grey;
+      }
     }
   }
 }

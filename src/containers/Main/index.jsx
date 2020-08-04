@@ -15,7 +15,7 @@ import {openPlace} from '@/actions'
 import './Main.scss';
 
 const Main = ({mainPlace, openPlace}) => {
-
+  // интегрируй роутер
   const [component, setComponent] = useState([{name: null, payload: <div></div>}]);
   useEffect(() => {
     if(component[0].name !== mainPlace) {
@@ -61,7 +61,15 @@ const Main = ({mainPlace, openPlace}) => {
             <div className={classNames('social')}>
               <Social />
             </div>
+          );
+        break
+        case 'choose':
+          newPayload = (
+            <div className='choose'>
+              Choose project
+            </div>
           )
+        break
         default:
 
       }
@@ -72,7 +80,7 @@ const Main = ({mainPlace, openPlace}) => {
   // Подключить аниме и пробовать делать систему.
   return(
     <div className='main'>
-       <TransitionGroup>
+       {/* <TransitionGroup>
           {
             component.map(({name, payload}) => (
               <CSSTransition
@@ -84,7 +92,8 @@ const Main = ({mainPlace, openPlace}) => {
               </CSSTransition>
             ))
           }
-       </TransitionGroup>
+       </TransitionGroup> */}
+       {component[0].payload}
     </div>
   )
 }

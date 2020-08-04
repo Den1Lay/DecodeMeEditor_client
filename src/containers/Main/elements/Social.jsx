@@ -2,40 +2,47 @@ import React, {useState, useEffect} from 'react'
 import {connect} from 'react-redux'
 import {socket} from '@/core'
 
-import {Input, Button} from '@/components';
+import {Input, Button, AddToCompadre} from '@/components';
 import {Select} from 'antd'
 
-import {choosePerson, updateUsers, previewPerson} from '@/actions'
+import {choosePerson, updateUsers, previewPerson, cleanApplicantList} from '@/actions'
 
 const {Option} = Select
 
-const Social = ({friends, superId, choosePerson, previewPerson, updateUsers}) => {
+const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantList, previewPerson, updateUsers}) => {
   debugger
   const [person, setPerson] = useState(null);
   const [personDetail, setPersonDetail] = useState(null);
   const [users, setUsers] = useState(null);
+  const [newComrade, setNewComrade] = useState([])
 
-  let isFriend = person ? person.friends.includes(superId) : null;
+  let isFriend = person ? person.friends.some(({superId:personId}) => personId === superId) : null;
 
-  // useEffect(() => {
-  //   if(users === null) {
-  //     socket.emit('GET_USERS', {token: localStorage.token});
-  //     socket.on('NEW_USERS', ({users: newUsers}) => setUsers(newUsers))
-  //   }
-  //   if(person && !isFriend && (!personDetail || (personDetail.userData.superId !== person.superId))) {
-  //     socket.emit('GET_USERS_DETAIL', {token: localStorage.token, personId: person.superId});
-  //     socket.on('NEW_USERS_DETAIL', ({user}) => setPersonDetail(user))
-  //   } else if(person && (!personDetail || (personDetail.userData.superId !== person.superId))) {
-  //     //is Friend
-  //     let friendInd;
-  //     for(let i in friends) {
-  //       if(friends[i].userData.superId === person.superId) {
-  //         friendInd = i;
-  //       }
-  //     }
-  //     setPersonDetail(friends[friendInd]);
-  //   }
-  // })
+  useEffect(() => {
+    if(users === null) {
+      socket.emit('GET_USERS', {token: localStorage.token});
+      socket.on('NEW_USERS', ({users: newUsers}) => setUsers(newUsers))
+    }
+    if(person && !isFriend && (!personDetail || (personDetail.userData.superId !== person.superId))) {
+      socket.emit('GET_USERS_DETAIL', {token: localStorage.token, personId: person.superId});
+      socket.on('NEW_USERS_DETAIL', ({user}) => setPersonDetail(user))
+    } else if(person && (!personDetail || (personDetail.userData.superId !== person.superId))) {
+      //is Friend
+      let friendInd;
+      for(let i in friends) {
+        if(friends[i].userData.superId === person.superId) {
+          friendInd = i;
+        }
+      }
+      setPersonDetail(friends[friendInd]);
+    };
+    if(applicantList.length !== newComrade.length) {
+      socket.emit('GET_COMRADE_DETAIL', {token: localStorage.token});
+      socket.on('NEW_COMRADE_DETAIL', ({comrades}) => {
+        setNewComrade(comrades)
+      })
+    }
+  })
 
   function onSelectUser(nickName) {
     let userInd;
@@ -62,19 +69,19 @@ const Social = ({friends, superId, choosePerson, previewPerson, updateUsers}) =>
   };
 
   function chooseHandler() {
+    debugger
     if(personDetail.projects != false) {
       isFriend && choosePerson(person.superId);
-      !isFriend && previewPerson(personDetail);
+      //!isFriend && previewPerson(personDetail);
     }
+  };
+  function addCompadreHandl(superId) {
+    socket.emit('ACCEPT_REQUEST', {token:localStorage.token, personId: superId});
+    cleanApplicantList(superId);
+    setNewComrade(newComrade.filter(({superId:personId}) => personId !== superId ))
   }
-  let personDetailIsLoaded = personDetail && (personDetail.userData.superId === person.superId);
 
-  const chooseBtn = (
-    <div className='social__chusedUser_chuseProfile'>
-      <Button clickHandler={chooseHandler}> {isFriend ? "Choose profile" : "Preview profile"}</Button>
-    </div> 
-  );
-  
+  let personDetailIsLoaded = personDetail && (personDetail.userData.superId === person.superId);
   return (
     <>
       <div className='social__chusedUser'>
@@ -93,9 +100,10 @@ const Social = ({friends, superId, choosePerson, previewPerson, updateUsers}) =>
                 }
               </div>
               {
-                isFriend 
-                ? chooseBtn
-                : personDetailIsLoaded && chooseBtn
+                isFriend &&
+                <div className='social__chusedUser_chuseProfile'>
+                  <Button clickHandler={() => chooseHandler()}>Choose profile</Button>
+                </div> 
               }
               { 
                 !isFriend && 
@@ -139,8 +147,22 @@ const Social = ({friends, superId, choosePerson, previewPerson, updateUsers}) =>
           }
         </Select>
       </div>
+      <div className='social__requestToFriend'>
+        {
+          newComrade.length
+          ? <div className='social__requestToFriend_list'>
+              {newComrade.map(({nickName, src, projectCount, superId}) => {
+                return <AddToCompadre onAdd={addCompadreHandl} nickName={nickName} src={src} projectCount={projectCount} superId={superId} />
+              })}
+            </div>
+          : <div className='social__requestToFriend_plug'>
+              No requests
+            </div>
+        }
+      </div>
     </>
   )
 }
 
-export default connect(({main: {friends, personObj: {userData: {superId}}}}) => ({friends, superId}), {choosePerson, updateUsers, previewPerson})(Social)
+export default connect(({main: {friends, personObj: {userData: {superId, applicantList}}}}) => ({friends, superId, applicantList, L: applicantList.length }), 
+{choosePerson, updateUsers, previewPerson, cleanApplicantList})(Social)

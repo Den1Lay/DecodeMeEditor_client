@@ -1,6 +1,6 @@
 import io from 'socket.io-client'
 import store from '@/store';
-import {updateUsers, newFriendRequest} from '@/actions'
+import {updateUsers, updateApplicantList} from '@/actions'
 
 const socket = io('http://localhost:4040', {
 });
@@ -34,10 +34,16 @@ socket
     console.log('%c%s', 'color: forestgreen; font-size: 22px;', 'GET_SUPER_ACCESS', pass)
   })
   .on('FRIEND_REQUEST', ({user}) => {
-    store.dispatch(newFriendRequest(user))
+    console.log('%c%s', 'color: aqua; font-size: 22px', 'FRIEND_REQUEST:', user)
+    store.dispatch(updateApplicantList(user))
+    
+    // openNotification by antd 
   })
-  .on('NEW_FRIEND', ({}) => {
-
+  .on('ACCEPT_REQUEST', ({user}) => { // like callback from click in social
+    console.log('%c%s', 'color: deeporange; font-size: 22px', 'ACCEPT_REQUEST:', user)
+  })
+  .on('NEW_FRIEND', ({user}) => { // response on click "ADD_TO_COMPADRE"
+    console.log('%c%s', 'color: navy; font-size: 22px', 'NEW_FRIEND:', user)
   })
 let lastV = null;
 

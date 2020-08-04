@@ -5,4 +5,5 @@ export {default as Menu} from './Menu';
 export {default as Mentions} from './Mentions';
 export {default as Dropdown} from './Dropdown';
 export {default as Answers} from './Answers';
-export {default as AccessSelect} from './AccessSelect'
+export {default as AccessSelect} from './AccessSelect';
+export {default as AddToCompadre} from './AddToCompadre';

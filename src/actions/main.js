@@ -38,12 +38,16 @@ export const updateUsers = users => ({
   type: "UPDATE_USERS",
   payload: users
 })
-export const newFriendRequest = payload => ({
-  type: 'NEW_FRIEND_REQUEST',
+export const updateApplicantList = payload => ({
+  type: 'UPDATE_APPLICANT_LIST',
   payload
 })
 export const previewPerson = payload => ({
   type: 'PREVIEW_PERSON',
+  payload
+})
+export const cleanApplicantList = payload => ({
+  type: 'CLEAN_APPLICANT_LIST',
   payload
 })
 // export const openProjectSetup = () => ({

@@ -23,6 +23,7 @@ const projects = [{
   comment: 'Init',
   date: format(new Date(), "yyyy-MM-dd"),
   superId: 'uuid12',
+  available: false,
   data: {
     pos: "0",
     branch: {
@@ -74,6 +75,7 @@ export default (state = defState, action) => {
   switch(type) {
   
     case 'ADD_PROJECT': //wb.v
+    //disavaible middleware модификация pcd..
       return (() => {
         debugger
         const {name, description, access, superAccess} = payload
@@ -87,6 +89,7 @@ export default (state = defState, action) => {
           comment: 'Init',
           date,
           superId: v4(),
+          available: false,
           data: {
             pos: "0",
             branch: {
@@ -175,6 +178,20 @@ export default (state = defState, action) => {
         ...state,
         mainPlace: payload
       }
+    case 'CLEAN_APPLICANT_LIST':
+      return (() => {
+        //payload = superId;
+        state.personObj.userData.applicantList = state.personObj.userData.applicantList.filter(el => el !== payload)
+        return state
+      })()
+    case 'UPDATE_APPLICANT_LIST': // updateApplicantList
+      return (() => {
+        //payload = user || obj.userData
+        state.personObj.userData.applicantList.push(payload);
+        return {
+          ...state
+        }
+      })()
     // case 'OPEN_PROJECT_CREATOR': 
     //   return {
     //     ...state,
@@ -522,14 +539,18 @@ export default (state = defState, action) => {
     case 'SELECT_PROJECT': 
     console.log(payload)
     return (() => {
+      let isFriend = state.personObj.userData.friends.some(({superId}) => superId === state.workPerson);
       if(state.personObj.userData.superId !== state.workPerson) {
-        let workFriendInd;
-        for(let i in state.personObj.userData.friends) {
-          if(state.personObj.userData.friends[i].superId === state.workPerson) {
-            workFriendInd = i;
-          }
-        };
-        state.personObj.userData.friends[workFriendInd].lastProject = payload;
+        //обновление координат данных о последних проектах
+        if(isFriend) { 
+          let workFriendInd;
+          for(let i in state.personObj.userData.friends) {
+            if(state.personObj.userData.friends[i].superId === state.workPerson) {
+              workFriendInd = i;
+            }
+          };
+          state.personObj.userData.friends[workFriendInd].lastProject = payload;
+        }
       } else {
         state.personObj.userData.myLastProject = payload;
       };
@@ -546,7 +567,9 @@ export default (state = defState, action) => {
         if(payload === superId) {
           projectInd = i;
         }
-      })
+      });
+      
+      // Хендлинг остутсвия проекта в PCD юзера и компенсация пропуска
       if(PCDInd === undefined) { // работает при пике проекта у друга
         // add new project in PCD;
         let firstVersionId = state.projects[projectInd].versions[0].superId;
@@ -557,20 +580,20 @@ export default (state = defState, action) => {
 
       state.workPCD = state.projectsCoordsData[PCDInd]; 
       let versionInd;
-      for(let i in state.projects[projectInd].versions) {
+      for(let i in state.projects[projectInd].versions) { //lastProject
         if(state.projects[projectInd].versions[i].superId === state.workPCD.workVersion) {
           versionInd = i;
         }
       };
       state.workBranch = state.projects[projectInd].versions[versionInd].data;
   
-      let workPath = state.workPCD[state.workPCD.workVersion].path.substring();
-      workPath = workPath.substring(1);
+      let workPath = state.workPCD[state.workPCD.workVersion].path.substring(1);
       while (workPath.length) {
         state.workBranch = state.workBranch.branch['q'+workPath[0]];
         workPath = workPath.substring(1);
       };
       state.workBranch.v = 'c'+random;
+      state.mainPlace = 'editor';
       return {
         ...state,
       }
@@ -605,32 +628,32 @@ export default (state = defState, action) => {
         ...state
       }
     })();
-    case 'NEW_FRIEND_REQUEST': 
-    return (() => {
-      //payload = user || obj.userData
-      state.personObj.userData.addToComrade.push(payload);
-      return {
-        ...state
-      }
-    })()
     case 'PREVIEW_PERSON': 
     return (() => {
+      // ОЧЕНЬ ПЛОХАЯ ИДЕЯ... ОЧЕНЬ.. без... И все таки это улетает на ребилд после альфы.
+      // 
       console.log("PREVIEW_PERSON: ", payload) 
          // payload = {userData, projects, }
       const {projects, userData} = payload;
       state.projects = projects;
       state.workPerson = userData.superId;
       state.workBranch = projects[0].versions[0].data;
-      let versionId = projects[0].versions[0].superId;
-      state.workPCD = {
-        projectId: projects[0].superId, 
-        workVersion: versionId,
-        [versionId]: {path: "0", height: "0"}
-      }
+
+      //let versionId = projects[0].versions[0].superId;
+      // projects.reverse().forEach(({superId, versions: {superId: versionId}}) => {
+      //   state.projectsCoordsData.push({projectId: superId, workVersion, }) // это должно быть частью SELECT PROJECT
+      // }) // дополнение PCD при отсутстивии пакета с Id выбранного проекта
+      // state.workPCD = {
+      //   projectId: projects[0].superId, 
+      //   workVersion: versionId,
+      //   [versionId]: {path: "0", height: "0"}
+      // };
+      //state.projectsCoordsData.push(state.workPCD);
    
       return state
     })()
     case 'CHOOSE_PERSON':
+      debugger
       // будут ли происходить изменения в друзьях при модифировании 
       return (() => {
         //payload === superId [friend]
@@ -662,7 +685,7 @@ export default (state = defState, action) => {
 
           state.workPCD = state.projectsCoordData[PCDInd];
 
-          let projectInd; 
+          let projectInd;
           for(let i in state.projects) {
             if(state.projects[i].superId === state.workPCD.projectId) {
               projectInd = i;

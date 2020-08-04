@@ -21,10 +21,9 @@ const Login = ({fetchUserData, userLogin}) => {
   function loginHandl() {
 
     //fetchUserData()
-    let fakeData = {
-      nickName: 'Es_ILias',
-      password: '17'
-    }
+    const {nickName, password} = localStorage
+    let fakeData = {nickName, password};
+    console.log(fakeData)
     userLogin(fakeData)
     setShow(!show)
   }

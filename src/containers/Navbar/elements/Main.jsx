@@ -89,14 +89,15 @@ debugger
     );
   }
   //console.log('PROJ_LENGHT:',projects.length)
-  let projectInd = null;
+  debugger
+  let projectInd = undefined;
   for(let i=0;i<projects.length;i++) {
     if(projects[i].superId === projectId) {
       projectInd = i;
     }
   };
-  let versionInd = null;
-  if(projectInd !== null) {
+  let versionInd = undefined;
+  if(projectInd !== undefined) {
     for(let i in projects[projectInd].versions) {
       if(projects[projectInd].versions[i].superId === workVersion) {
         versionInd = i;
@@ -114,12 +115,16 @@ debugger
             current: projectId,
             selectHandl: (ev) => selectProject(ev.key)})} 
           onVisibleChange={(ev) => console.log('OnVisibleChange', ev)}>
-          <div><Input place='navbar' placeholder={projects.length ? projects[projectInd].name : "Let's create some-thing" } /></div>
+          <div><Input place='navbar' placeholder={(projects.length && projectInd !== undefined) 
+              ? projects[projectInd].name 
+              : projects.length
+                ? "Choose some-thing"
+                : "Let's create some-thing" } /></div>
         </Dropdown>
       </div>
       <div className='navbar__mainActions_saves'>
         {
-         projects.length
+         (projects.length && projectInd !== undefined)
          ? <Dropdown 
             overlay={makeMenu({
               data:projects[projectInd].versions , 

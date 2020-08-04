@@ -51,9 +51,9 @@ const SelectBase = ({changeHandler, isCreate, isSuper, projects, friends, workPC
   } else {
     
     if(isSuper) {
-      defData = superIdToNick(projects[projectInd].access);
-    } else {
       defData = superIdToNick(projects[projectInd].superAccess);
+    } else {
+      defData = superIdToNick(projects[projectInd].access);
     }
   }
 

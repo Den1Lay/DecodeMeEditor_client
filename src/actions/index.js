@@ -14,8 +14,9 @@ export {savePod} from './main';
 export {changeBranch} from './main';
 export {updateUsers} from './main';
 export {openPlace} from './main';
-export {newFriendRequest} from './main';
+export {updateApplicantList} from './main';
 export {previewPerson} from './main';
+export {cleanApplicantList} from './main';
 
 export {fetchUserData} from './network'
 export {userLogin} from './network'
