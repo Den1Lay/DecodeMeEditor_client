@@ -22,7 +22,7 @@ const Branch = ({workBranch, workPCD, v, addPod, deletePod, choosePod, currentHe
   // нужно организовать точечную модификацию по высоте и хранилище всех подов..
   let realResData = resData.map(({coord:{height}, label, main}) => {
     return <Pod 
-      actived={currentHeight===height} 
+      actived={currentHeight==height} 
       label={label} 
       main={main} 
       height={height} 

@@ -3,9 +3,9 @@ import {connect} from 'react-redux'
 
 import {Button} from '@/components'
 
-import {openPlace} from '@/actions'
+import {openPlace, chooseMe} from '@/actions'
 
-const Navbar_Social = ({personObj, openPlace}) => {
+const Navbar_Social = ({personObj, openPlace, chooseMe}) => {
   // function socialClickHandl(ev) {
   //   ev.persist();
   //   console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
@@ -21,14 +21,14 @@ const Navbar_Social = ({personObj, openPlace}) => {
           Details
         </Button>
       </div>
-      <div className='navbar__social_me'>
+      <div className='navbar__social_me' onClick={chooseMe}>
         {
           personObj && (
             personObj.src 
             ? <div className='navbar__social_me_avatar'>
                 <img src="" alt=""/>
               </div>
-            : <div className='navbar__social_me_avatar_alt' onClick={() => console.log('I_CLICK')}>
+            : <div className='navbar__social_me_avatar_alt'>
               I
             </div>
           )
@@ -38,4 +38,4 @@ const Navbar_Social = ({personObj, openPlace}) => {
   )
 }
 
-export default connect(({main: {friends, personObj}}) => ({friends, personObj}), {openPlace})(Navbar_Social);
+export default connect(({main: {friends, personObj}}) => ({friends, personObj}), {openPlace, chooseMe})(Navbar_Social);

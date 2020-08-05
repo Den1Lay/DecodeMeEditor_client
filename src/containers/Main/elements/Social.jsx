@@ -4,17 +4,20 @@ import {socket} from '@/core'
 
 import {Input, Button, AddToCompadre} from '@/components';
 import {Select} from 'antd'
+import {openNotification, mineInd} from '@/utils'
 
-import {choosePerson, updateUsers, previewPerson, cleanApplicantList} from '@/actions'
+import {choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData} from '@/actions'
 
 const {Option} = Select
 
-const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantList, previewPerson, updateUsers}) => {
+const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantList, updateData, previewPerson, updateUsers}) => {
   debugger
+  // возможность работать с челом в зависимости от доступов с его стороны...
   const [person, setPerson] = useState(null);
   const [personDetail, setPersonDetail] = useState(null);
   const [users, setUsers] = useState(null);
-  const [newComrade, setNewComrade] = useState([])
+  const [newComrade, setNewComrade] = useState([]);
+  const [intObj, setIntObj] = useState(null)
 
   let isFriend = person ? person.friends.some(({superId:personId}) => personId === superId) : null;
 
@@ -39,40 +42,47 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
     if(applicantList.length !== newComrade.length) {
       socket.emit('GET_COMRADE_DETAIL', {token: localStorage.token});
       socket.on('NEW_COMRADE_DETAIL', ({comrades}) => {
+        console.log(`ALlenght: ${applicantList.length} newComrade.length: ${newComrade.length}`)
         setNewComrade(comrades)
       })
-    }
+    };
   })
 
   function onSelectUser(nickName) {
-    let userInd;
-    for(let i in users) {
-      if(users[i].nickName === nickName) {
-        userInd = i;
-      }
-    };
-    setPerson(users[userInd])
-  };
+    let userInd = [];
+    mineInd(users, nickName, 'nickName', userInd);
 
+    setPerson(users[userInd[0]])
+  };
   function onSelectFriend(nickName) {
-    let friendInd; 
-    for(let i in friends) {
-      if(friends[i].userData.nickName === nickName) {
-        friendInd = i;
-      }
-    }
-    setPerson(friends[friendInd].userData);
+    // ИНТЕГРИРУЙ сюда луп, который будет получать FRESH данные и сразу же обновлять.
+    // нет нет. При клике происходит подъем последних данных и подписывание на ВСЕ изменения. Не нужны лупы.
+    let friendInd = []; 
+    mineInd(friends, nickName, ['userData', 'nickName'], friendInd);
+    
+    socket.emit('SUBSCRIBE_USER', {
+      token: localStorage.token, 
+      personId: friends[friendInd[0]].userData.superId
+    });
+    socket.on('NEW_SUBSCRIBE_USER', ({friendObj}) => {
+      updateData({data: friendObj, address: 'friend'});
+      setPerson(friendObj.userData)
+    })
   };
 
   function onSendRequest() {
     socket.emit('FRIEND_REQUEST', {token: localStorage.token, person})
   };
 
+  let availableProjects = personDetail && personDetail.projects.filter( ({access}) => access.includes(superId) || access.includes('all') )
+
   function chooseHandler() {
     debugger
-    if(personDetail.projects != false) {
+    if(availableProjects.length) {
       isFriend && choosePerson(person.superId);
       //!isFriend && previewPerson(personDetail);
+    } else {
+      openNotification({type: 'warning', message: 'Restriction', description: 'The user must have at least one project'})
     }
   };
   function addCompadreHandl(superId) {
@@ -82,6 +92,7 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
   }
 
   let personDetailIsLoaded = personDetail && (personDetail.userData.superId === person.superId);
+
   return (
     <>
       <div className='social__chusedUser'>
@@ -105,6 +116,7 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
                   <Button clickHandler={() => chooseHandler()}>Choose profile</Button>
                 </div> 
               }
+              
               { 
                 !isFriend && 
                 <div className='social__chusedUser_addToFriend'>
@@ -112,7 +124,7 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
                 </div>
               }
               <div className='social__chusedUser_projectCount'>
-                {personDetail && `Count of projects: ${personDetail.projects.length}`}
+                {personDetail && `Count of available projects: ${availableProjects.length}`}
               </div>
             </div>
           : <div className='social__chusedUser_plug'>
@@ -164,5 +176,7 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
   )
 }
 
-export default connect(({main: {friends, personObj: {userData: {superId, applicantList}}}}) => ({friends, superId, applicantList, L: applicantList.length }), 
-{choosePerson, updateUsers, previewPerson, cleanApplicantList})(Social)
+export default connect(({main: {friends, personObj: {userData: {superId, applicantList}}, accessV}}) => ({
+  friends, superId, applicantList, L: applicantList.length, fL: friends.length, accessV
+}), 
+{choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData})(Social)

@@ -1,6 +1,7 @@
 import {format, startOfWeek} from 'date-fns';
 import {v4} from 'uuid'
 import FastClone from 'fastest-clone'
+import {mineInd, openNotification} from '@/utils'
 
 const projectsCoordData = [
   {
@@ -156,6 +157,8 @@ export default (state = defState, action) => {
         let superKicked = [];
         let newObservers = [];
         let newEditord = [];
+        // let all = [];
+        // let superAll = [];
         checkId(state.projects[projectInd].access, access, kicked);
         checkId(state.projects[projectInd].superAccess, superAccess, superKicked);
         checkId(access, state.projects[projectInd].access, newObservers);
@@ -180,8 +183,10 @@ export default (state = defState, action) => {
       }
     case 'CLEAN_APPLICANT_LIST':
       return (() => {
+        debugger
         //payload = superId;
-        state.personObj.userData.applicantList = state.personObj.userData.applicantList.filter(el => el !== payload)
+        state.personObj.userData.applicantList = state.personObj.userData.applicantList.filter(({superId}) => superId !== payload)
+        console.log(state.personObj.userData.applicantList);
         return state
       })()
     case 'UPDATE_APPLICANT_LIST': // updateApplicantList
@@ -191,6 +196,82 @@ export default (state = defState, action) => {
         return {
           ...state
         }
+      })()
+    case 'UPDATE_DATA': 
+      // {payload, address, dlsInfo} = payload
+      debugger
+      return (() => {
+        let {data, address, dls} = payload;
+        switch(address) {
+          case 'friend':
+            let {userData, projects} = data;
+            let friendInd = [];
+            mineInd(state.friends, userData.superId, ['userData','superId'], friendInd);
+            state.friends[friendInd[0]].projects = projects;
+          break;
+          case 'projects':
+          break;
+          case 'versions':
+          break;
+        }
+        return state;
+      })()
+    case 'ACCESS_CONTROL': 
+      //{event, pass} = payload
+      //{projectId, superId} = pass 
+      debugger
+      return (() => {
+        const {event, pass: {projectId, superId, all}} = payload;  // superId отправителя.
+        // all - false, asBase 
+        // Если алл тру, значит сейчас коннект с другим челом, который заредачил all, и этот ивент прилетел именно на его адрес,
+        // и включился по этому.
+        if(state.personObj.userData.superId === superId) {
+          return state
+        };
+        let friendInd = [];
+        mineInd(state.friends, superId, ['userData', 'superId'], friendInd);
+        let projectInd = [];
+        mineInd(state.friends[friendInd[0]].projects, projectId, 'superId', projectInd);
+        const myId = state.personObj.userData.superId;
+        let accessCopy = state.friends[friendInd[0]].projects[projectInd[0]].access.slice();
+        let superAccessCopy = state.friends[friendInd[0]].projects[projectInd[0]].superAccess.slice();
+        switch(event) {
+          case 'NEW':
+          if(!accessCopy.includes(myId) && !accessCopy.includes('all')) {
+            openNotification({type: 'success', message: "New access", description: `From ${payload.pass.nickName}`})
+          }
+          state.friends[friendInd[0]].projects[projectInd[0]].access.push(all ? 'all' : myId);
+          break
+
+          case 'NEW_SUPER':
+          if(!superAccessCopy.includes(myId) && !superAccessCopy.includes('all')) {
+            openNotification({type: 'success', message: "New super access", description: `From ${payload.pass.nickName}`})
+          }
+          state.friends[friendInd[0]].projects[projectInd[0]].superAccess.push(all ? 'all' : myId);
+          break
+
+          case 'KICK':
+          state.friends[friendInd[0]].projects[projectInd[0]].access = all
+          ? accessCopy.filter(id => id !== 'all')
+          : accessCopy.filter(id => id !== myId);
+          let freshCopy = state.friends[friendInd[0]].projects[projectInd[0]].access;
+          if(!freshCopy.includes(myId) && !freshCopy.includes('all')) {
+            openNotification({type: 'warning', message: "Lose access", description: `From ${payload.pass.nickName}`})
+          }
+          break
+
+          case 'SUPER_KICK':
+          state.friends[friendInd[0]].projects[projectInd[0]].superAccess = all
+          ? accessCopy.filter(id => id !== 'all')
+          : accessCopy.filter(id => id !== myId);
+          let freshSuperCopy = state.friends[friendInd[0]].projects[projectInd[0]].access;
+          if(!freshSuperCopy.includes(myId) && !freshSuperCopy.includes('all')) {
+            openNotification({type: 'warning', message: "Lose super access", description: `From ${payload.pass.nickName}`})
+          }
+          break
+        }
+        state.accessV = random;
+        return state
       })()
     // case 'OPEN_PROJECT_CREATOR': 
     //   return {
@@ -603,30 +684,17 @@ export default (state = defState, action) => {
       console.log('payload');
       state.workPCD.workVersion = payload;
 
-      let projectInd;
-      for(let i in state.projects) {
-        if(state.projects[i].superId === state.workPCD.projectId) {
-          projectInd = i
-        }
-      }
+      let projectInd = [];
+      mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd);
 
-      let versionInd;
-      for(let i in state.projects[projectInd].versions) {
-        if(payload === state.projects[projectInd].versions[i].superId) {
-          versionInd = i;
-        }
-      };
-
-      state.workBranch = state.projects[projectInd].versions[versionInd].data;
+      let versionInd = [];
+      mineInd(state.projects[projectInd[0]].versions, payload, 'superId', versionInd);
+      
+      state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
       let path = state.workPCD[payload].path.substring(1);
-      while(path.length) {
-        state.workBranch = state.workBranch.branch['q'+path[0]];
-        path = path.substring(1);
-      }
+      pathReducer(path, state)
       state.workBranch.v = 'c'+random
-      return {
-        ...state
-      }
+      return state
     })();
     case 'PREVIEW_PERSON': 
     return (() => {
@@ -652,66 +720,97 @@ export default (state = defState, action) => {
    
       return state
     })()
-    case 'CHOOSE_PERSON':
+    case 'ADD_FRIEND': 
+      //payload === user 
       debugger
+      console.log(payload)
+      return (() => {
+        const {userData} = payload
+        state.personObj.userData.friends.push({superId: userData.superId, lastProject: null});
+        state.friends.push(payload);
+        return state
+      })()
+    case 'CHOOSE_ME': 
+      return (() => {
+        // вызов с вынужденной датой через перепресваивание рабочего проекта
+        // грядет эпоха геттеров 
+        state.workBranch = {};
+        state.projects = state.personObj.projects;
+        state.workPerson = state.personObj.userData.superId;
+
+        if(state.personObj.userData.myLastProject !== null) {
+          const lastProject = state.personObj.userData.myLastProject;
+          
+          let projectsCoordInd = [];
+          mineInd(state.projectsCoordsData, lastProject, 'projectId', projectsCoordInd)
+   
+          state.workPCD = state.projectsCoordsData[projectsCoordInd[0]];
+          let projectInd = []
+          mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
+
+          let versionInd = [];
+          mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
+    
+          state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
+          let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+          pathReducer(path, state);
+          state.mainPlace = 'editor';
+        } else {
+          state.workPCD = null
+          state.workBranch.branch = {};
+          
+          state.mainPlace = 'beginner'
+        }
+      state.workBranch.v = random
+        return state;
+      })()
+    case 'CHOOSE_PERSON':
+  
       // будут ли происходить изменения в друзьях при модифировании 
       return (() => {
         //payload === superId [friend]
         // ОБРАБОТАТЬ ВСЕ ИСКЛЮЧЕНИЯ...
-        let friendInd;
-        for(let i in state.friends) {
-          if(state.friends[i].userData.superId === payload) {
-            friendInd = i;
-          }
-        }
-        state.projects = state.friends[friendInd].projects;
+        debugger
+        let friendInd = [];
+        mineInd(state.friends, payload, ['userData', 'superId'], friendInd);
 
-        let deepFriendInd;
-        for(let i in state.personObj.userData.friends) {
-          if(state.personObj.userData.friends[i].superId === payload) {
-            deepFriendInd = i;
-          }
-        }
+        state.projects = state.friends[friendInd[0]].projects;
+
+        let deepFriendInd = [];
+        mineInd(state.personObj.userData.friends, payload, 'superId', deepFriendInd);
         // friends last project....
-        let lastMyProjectInFriend = state.personObj.userData.friends[deepFriendInd].lastProject;
+        let lastMyProjectInFriend = state.personObj.userData.friends[deepFriendInd[0]].lastProject;
         if(lastMyProjectInFriend !== null) {
           // чекнуть исключения на удаленный проект
-          let PCDInd;
-          for(let i in state.projectsCoordsData) {
-            if(state.projectsCoordsData[i].projectId === lastMyProjectInFriend) {
-              PCDInd = i;
-            }
-          };
+          let PCDInd = [];
+          mineInd(state.projectsCoordsData, lastMyProjectInFriend, 'projectId', PCDInd);
 
-          state.workPCD = state.projectsCoordData[PCDInd];
+          state.workPCD = state.projectsCoordsData[PCDInd[0]];
 
-          let projectInd;
-          for(let i in state.projects) {
-            if(state.projects[i].superId === state.workPCD.projectId) {
-              projectInd = i;
-            }
-          };
+          let projectInd = [];
+          mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
 
-          let versionInd;
-          for(let i in state.projects[projectInd].versions) {
-            if(state.projects[projectInd].versions[i] === state.workPCD.workVersion) {
-              versionInd = i;
-            }
-          }
-          state.workBranch = state.projects[projectInd].versions[versionInd].data;
-
+          console.time()
+          let versionInd = [];
+          mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
+          console.timeEnd()
+          state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
+          let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+          pathReducer(path, state)
+          state.mainPlace = 'editor'
         } else {
           state.workPCD = null;
           state.workBranch.branch = {};
           state.mainPlace = 'choose'
         }
         state.workPerson = payload;
-        state.workBranch.v = 'f'+random;
+        state.workBranch.v = 'с'+random;
         return {
           ...state
         }
       })()
     case 'INIT':
+      debugger
       return (() => {
         // РЕВОРК ! (пробелема с пустыми данными...)
         // РЕФАКТОРИИИНГ  !!!!! !! ! (хотя бы до первого деплоя)
@@ -774,6 +873,9 @@ export default (state = defState, action) => {
             state.mainPlace = 'beginner'
           }
         } else {
+          debugger
+          // обработать ошибку с отключенным аксессом и в следствии этого упавшим проектом
+
           // поиск проекта и метаданных у другого персонажа
           // можно добавлять в друзья, если есть хотя бы один проект
           // ДОДЕЛАТЬ С ДЕБАГЕРОМ...
@@ -789,7 +891,7 @@ export default (state = defState, action) => {
               friendInd = i;
             }
           })
-          state.projects = state.friends[friendInd]; /// прокинуты проекты
+          state.projects = state.friends[friendInd].projects; /// прокинуты проекты
 
           let projectInd;
           state.projects.forEach(({superId}, i) => {
@@ -805,10 +907,10 @@ export default (state = defState, action) => {
           //   }
           // });
 
-          state.workPCD = state.projectsCoordData[projectsCoordInd]; // прокинуты workPCD
+          state.workPCD = state.projectsCoordsData[projectsCoordInd]; // прокинуты workPCD
 
           let versionInd;
-          state.projects[projectInd].forEach(({superId}, i) => {
+          state.projects[projectInd].versions.forEach(({superId}, i) => {
             if(superId === state.workPCD.workVersion) {
               versionInd = i;
             }
@@ -834,4 +936,27 @@ export default (state = defState, action) => {
     default:
       return state;
   }
+  
+  // function mineInd(source, etalon, key, mod) {
+  //   for(let i in source) {
+  //     const natSource = i => {
+  //         key = Array.isArray(key) ? key : [key]
+  //         let base = source[i];
+  //         let keyPath = key.slice();
+  //         while(keyPath.length) {
+  //           base = base[keyPath.shift()];
+  //         }
+  //         return base;
+  //     }
+  //     if(natSource(i) === etalon) {
+  //       mod[0] = i
+  //     }
+  //   }
+  // };
+  function pathReducer(path, state) {
+    while(path.length) {
+      state.workBranch = state.workBranch.branch['q'+path[0]];
+      path = path.substring(1);
+    };
+  };
 }

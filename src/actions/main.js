@@ -50,6 +50,10 @@ export const cleanApplicantList = payload => ({
   type: 'CLEAN_APPLICANT_LIST',
   payload
 })
+export const addFriend = payload => ({
+  type: 'ADD_FRIEND',
+  payload
+})
 // export const openProjectSetup = () => ({
 //   type: 'OPEN_PROJECT_SETUP'
 // })
@@ -76,5 +80,18 @@ export const loginIn = () => ({
 })
 export const choosePerson = payload => ({
   type: 'CHOOSE_PERSON',
+  payload
+})
+export const chooseMe = () => ({
+  type: 'CHOOSE_ME'
+})
+export const accessControl = payload => ({
+  type: 'ACCESS_CONTROL',
+  payload
+})
+
+//GETTERS
+export const updateData = payload => ({
+  type: 'UPDATE_DATA', 
   payload
 })

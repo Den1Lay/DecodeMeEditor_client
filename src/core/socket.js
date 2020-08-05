@@ -1,9 +1,13 @@
 import io from 'socket.io-client'
 import store from '@/store';
-import {updateUsers, updateApplicantList} from '@/actions'
+import {updateUsers, updateApplicantList, addFriend, accessControl} from '@/actions'
+
+import {openNotification} from '@/utils'
+import operNotification from '../utils/notification';
 
 const socket = io('http://localhost:4040', {
-});
+  transports: ['polling']
+}); 
 
 socket
   .on('connect', () => {
@@ -27,23 +31,43 @@ socket
   .on('NEW_VERSION', pass => {
     console.log('%c%s', 'color: goldenrod; font-size: 22px;', 'NEW_VERSION_YOU_PROJECT', pass)
   })
-  .on('SHOW_ACCESS', (pass) => {
-    console.log('%c%s', 'color: forestgreen; font-size: 22px;', 'GET_SHOW_ACCESS', pass)
+  // ACCESS ZONE
+  // существует критический баг, при изменении all доступа со стороны выбираемой персоны, во время пиков
+  // теоретически решается хардкодом. Создание новых обработчиков или добавление аргументов к нижним... 
+  .on('NEW_ACCESS', pass => {
+    
+    store.dispatch(accessControl({event: 'NEW', pass}))
+    //console.log('%c%s', 'color: forestgreen; font-size: 22px;', 'GET_SHOW_ACCESS', pass)
   })
-  .on('SUPER_ACCESS', (pass) => {
-    console.log('%c%s', 'color: forestgreen; font-size: 22px;', 'GET_SUPER_ACCESS', pass)
+  .on('NEW_SUPER_ACCESS', pass => {
+    openNotification({type: 'success', message: "New super access", description: `From ${pass.nickName}`})
+    store.dispatch(accessControl({event: 'NEW_SUPER', pass}))
+    //console.log('%c%s', 'color: forestgreen; font-size: 22px;', 'GET_SUPER_ACCESS', pass)
   })
+  .on('KICK', pass => {
+    
+    store.dispatch(accessControl({event: 'KICK', pass}))
+  })
+  .on('SUPER_KICK', pass => {
+
+    store.dispatch(accessControl({event: 'SUPER_KICK', pass}))
+  })
+  // FRIEND EVENTS ZONE
   .on('FRIEND_REQUEST', ({user}) => {
     console.log('%c%s', 'color: aqua; font-size: 22px', 'FRIEND_REQUEST:', user)
+    openNotification({type: 'info', message: 'New request to friend'})
     store.dispatch(updateApplicantList(user))
-    
     // openNotification by antd 
   })
   .on('ACCEPT_REQUEST', ({user}) => { // like callback from click in social
-    console.log('%c%s', 'color: deeporange; font-size: 22px', 'ACCEPT_REQUEST:', user)
+    console.log('%c%s', 'color: deeporange; font-size: 22px', 'ACCEPT_REQUEST:', user);
+    store.dispatch(addFriend(user))
   })
   .on('NEW_FRIEND', ({user}) => { // response on click "ADD_TO_COMPADRE"
-    console.log('%c%s', 'color: navy; font-size: 22px', 'NEW_FRIEND:', user)
+    console.log('%c%s', 'color: navy; font-size: 22px', 'NEW_FRIEND:', user);
+    openNotification({type: 'success', message: 'Accept request', description: `New friend: ${user.userData.nickName}`})
+    store.dispatch(addFriend(user));
+    
   })
 let lastV = null;
 
@@ -137,6 +161,7 @@ store.subscribe(() => {
       })()
       break;
       case 's':
+      //SETUP worker
       (() => {
         const {kicked, superKicked, newObservers, newEditord} = freshState.main;
         let projectInd;
