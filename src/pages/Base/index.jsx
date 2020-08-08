@@ -36,6 +36,9 @@ const Base = ({projects, mainPlace}) => {
     //     <Button clickHandler={() => setShowLazy(!showLazy)}>Change</Button>
     //   </>
     // )
+
+   
+
   return(
     <>
       {

@@ -88,7 +88,21 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
 
   function chooseHandler() {
     if(availableProjects.length && isFriend) {
-      choosePerson(person.superId);
+
+      // Это делается, потому что этот чел мог что то настроить за время раздумий, а я спецем 
+      // не обрабатывал эти вызовы.. (причина в необходимости перестраивать пол редюсера) так что 
+      // дополнительный запрос;
+      socket.emit('SUBSCRIBE_USER', {
+        token: localStorage.token, 
+        personId: personDetail.userData.superId
+      });
+      socket.on('NEW_SUBSCRIBE_USER', ({friendObj}) => {
+        updateData({data: friendObj, address: 'friend'});
+        choosePerson(person.superId);
+      })
+
+
+ 
       //!isFriend && previewPerson(personDetail);
     } else {
       openNotification({type: 'warning', message: 'Restriction', description: 'The user must have at least one project'})

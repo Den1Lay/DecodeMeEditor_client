@@ -9,11 +9,24 @@ import {Mentions, Button, Input, Answers, ArtPart} from '@/components'
 import {Dropdown, Menu} from 'antd'
 import {mineInd} from '@/utils'
 
-import {savePod, changeBranch, changeMaster} from '@/actions' 
+import {savePod, changeBranch, changeMaster, setIllustrations} from '@/actions' 
 
-import {axios} from '@/core'
+import {axios, socket} from '@/core'
 
-const Editor = ({savePod, workBranch, currentHeight, changeBranch, v, master, superId, changeMaster, fakeBranch, faceCH}) => {
+const Editor = (
+  {
+    savePod, 
+    workBranch, 
+    currentHeight, 
+    changeBranch, v, 
+    master, 
+    nickName,
+    person,
+    workPCD,
+    changeMaster, 
+    illustrations,
+    setIllustrations, 
+  }) => {
   // проверка на сохранение...
   const [selectedType, setSelectedType] = useState('0'); // 0: POD, 1: QUESTION
   const [data, setData] = useState({
@@ -21,6 +34,7 @@ const Editor = ({savePod, workBranch, currentHeight, changeBranch, v, master, su
     mainPart: "",
     comment: "",
     artsDesription: "",
+    artSrc: null,
     branchDirection: "",
     answers: [],
     activeKey: "0",
@@ -52,13 +66,13 @@ useEffect(() => {
           }
           answers = newAnswers;
         }
-  
+      
       setData({
         label, 
         mainPart: main, 
         comment, 
         artsDesription: alt,
-        artSrc: src,
+        artSrc: illustrations.includes(src) ? src : null,
         answers,
         activeKey: "0",
         branchDirection: workBranch.branch.branchDirection})
@@ -68,7 +82,7 @@ useEffect(() => {
   }
 })
   
-  let masterHere = master === superId;
+  let masterHere = master === nickName;
 
   function masterHandl() {
 
@@ -92,8 +106,18 @@ useEffect(() => {
       headers: { 'Content-Type': "multipart/form-data", 'newname': newName}
     }).then(({data: src}) => {
       console.log('RES_DATA:', src)
-      setData({...data, artSrc: src })
+      socket.emit('SET_ILLUSTRATIONS', {token: localStorage.token, person, workPCD, src, action: 'ADD'})
+      setIllustrations({src, action: 'ADD'});
+      setData({...data, artSrc: src });
+      // добавить знатный денжер о всех последствиях удаления картинки
+      //socket.emit отработать после всех тестов нового компонента
     })
+  }
+
+  function setArtHandler(pass) {
+    setData({...data, artSrc: pass });
+    // ev.persist();
+    // 
   }
   // const menu = (
   //   <div className='editorsMenu'>
@@ -167,7 +191,7 @@ useEffect(() => {
               <Button clickHandler={masterHandl}>
                 {master === null 
                 ? "Stay master" 
-                : master === superId 
+                : master === nickName 
                   ? "Give away right" 
                   : "Request the right"}
               </Button>
@@ -189,6 +213,8 @@ useEffect(() => {
             row={10} 
             mentionsHandler={ev => {setData({...data, artsDesription: ev}); eventHandl()}}
             fileHandler={fileHandler}
+            illustrations={illustrations}
+            setArtSrc={setArtHandler}
             />
           {/* <Mentions  row={10} placeholder={`Arts description`} changeHandler={}/> */}
         </div>
@@ -203,19 +229,25 @@ useEffect(() => {
   )
 }
 
-export default connect(({main: {workBranch, workPCD, projects, personObj}}) => ({
-  master: (() => {
-    if(workPCD !== null) {
-      let projectInd = [];
-      mineInd(projects, workPCD.projectId, 'superId', projectInd);
-
-      let versionInd = [];
-      mineInd(projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
-      return projects[projectInd[0]].versions[versionInd[0]].master
-    }
-  })(),
-  superId: personObj.userData.superId,
-  workBranch, 
-  v: workBranch.v,
-  currentHeight: workPCD ? workPCD[workPCD.workVersion].height : null,
-}), {savePod, changeBranch, changeMaster})(Editor)
+export default connect(({main: {workBranch, workPCD, projects, personObj, workPerson}}) => {
+  let projectInd = [];
+  let versionInd = [];
+  let master = null;
+  if(workPCD !== null) {
+    // в мастере будет никнейм 
+    mineInd(projects, workPCD.projectId, 'superId', projectInd);    
+    mineInd(projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
+    master = projects[projectInd[0]].versions[versionInd[0]].master
+  };
+  // я не должен думать, есть ли здесь эти данные.... 
+  return {
+    master,
+    illustrations: projects[projectInd[0]].versions[versionInd[0]].illustrations,
+    nickName: personObj.userData.nickName,
+    workBranch, 
+    v: workBranch.v,
+    person: workPerson,
+    workPCD,
+    currentHeight: workPCD ? workPCD[workPCD.workVersion].height : null,
+  }
+}, {savePod, changeBranch, changeMaster, setIllustrations})(Editor)

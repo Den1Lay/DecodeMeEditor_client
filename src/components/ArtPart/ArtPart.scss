@@ -21,6 +21,14 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      &_inputs {
+        display: flex;
+        flex-direction: column;
+        justify-content:space-around;
+        input {
+          margin-bottom: 1.3vh;
+        }
+      }
     }
   }
   &__controllers {

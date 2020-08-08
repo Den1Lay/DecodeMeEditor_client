@@ -1,3 +1,13 @@
+// Возможно тебе пригодится это когда ты вернешься спустя какое то время.. Проведи его АХУЕНННО!!
+// Рабочий процесс крутиться вокруг переменной workBranch, которая за счет модицирования project позволят редактировать ВСЕ
+// Главное это правильно выделить ее из нужно проекта, в этом тебе помогут mineInd и pathReducer. В дальнейшем рабочая вертка 
+// взаимодействует с ProjectsCoordsData, из которой так же выделяется рабочий объект на основании прошлых проектов, юзеров.
+// Этот рабочий объект ответсвеннен за рабочую ветку и высоту. PCD хранит в себе данных проектов ВСЕХ Юзеров к которым ты притрагивался
+// При работе на акке друга детаются новые данные и происходит привязка к его комнате с последующей прослушкой всех его действий
+// отлавливанием их сокетами в core и модификацией... 
+// Все данные имеют обратную совместимость так что баги с невозможностью найти индекс не должные происходить...
+// Только специально обрабатываемые.. при удалении.. Тоесть только 90 % таких событий должно быть отловлено в INIT подобных событиях
+// Не подгорай :)
 import {format, startOfWeek} from 'date-fns';
 import {v4} from 'uuid'
 import FastClone from 'fastest-clone'
@@ -19,7 +29,7 @@ const projects = [{
   name: "QWE",  
   description: "QWE",
   superId: 'uuidentificator',
-  lastVersion: 0, //proj v || wb v
+  lastVersion: 0, // proj v || wb v
   versions: [{
   comment: 'Init',
   date: format(new Date(), "yyyy-MM-dd"),
@@ -92,6 +102,7 @@ export default (state = defState, action) => {
           date,
           superId: v4(),
           master: null,
+          illustrations: [],
           data: {
             pos: "0",
             branch: {
@@ -201,10 +212,22 @@ export default (state = defState, action) => {
     case 'UPDATE_DATA': 
       // {payload, address, dlsInfo} = payload
       debugger
-      return (() => { // отрабатывает при пике юзера в социальном компоненте
+      // ВСЕ ЭТИ ВЕЩИ МОГУТ ОТРАБОТАТЬ ПРИ КОМНАТЕ ВЫБОРА... 
+      // Я НЕ ОБНОВЛЯЮ этот стафф. просто произвожу повторный запрос, если есть Подтверждающий клик.    
+      // прослушка своего объекта не прекращается!!! --> проводишь обновления
+
+      // А что будет, если ты отключишься 
+      // Вся логика UPDATE даты построена вокруг того, что ТЫ сейчас работаешь над ним, и
+      // и что сейчас ты находишься в рабочем юзере.. ----> При переключении проекты меняются и куда 
+      // улетят эти данные (никуда, индекс не найдется) не известно... Поэтому обновление данные происходит только в лайв
+      // режиме. А переключение на себя будет происходить только после гетта полного стека свежих данных.
+      
+      // больше не делай таких вредных обработчиков
+      return (() => { 
         let {data, address, dls} = payload;
+        let connected = state.workPerson === data.person 
         switch(address) {
-          case 'friend':
+          case 'friend': //  отрабатывает при пике юзера в социальном компоненте 
             (() => {
               let {userData, projects} = data;
               let friendInd = [];
@@ -218,7 +241,7 @@ export default (state = defState, action) => {
             })()
           break;
           case 'versions':
-            (() => {
+            connected && (() => {
               let {person, projectId, versionId, workVersion} = data
               // Если ты находишь в другом проекте или версии...
               // update version;
@@ -242,9 +265,11 @@ export default (state = defState, action) => {
             })()
           break;
           case 'available': 
-          return (() => {
+          connected && (() => {
             // ПРодумай как фильтрить это..
-            let {person, workPCD, pass} = data;
+            let {person, workPCD, pass} = data; // Хаю хай тут баг, кста, когда чел будет в комнате выбора, 
+            // он может получить этот вызов и ничего не обновить... Безотказная система падет.
+            // можно обходить это простой проверкой на рабочего чела, который добывается в персоне сверху
             let projectInd = [];
             mineInd(state.projects, workPCD.projectId, 'superId', projectInd);
     
@@ -252,10 +277,31 @@ export default (state = defState, action) => {
             mineInd(state.projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
 
             state.projects[projectInd[0]].versions[versionInd[0]].master = pass;
-            return state
+            
           })()
-          default:
+          break;
+          // картинки должны находится в версии а не в проекте.. 
+          case 'illustrations':
+          connected && (() => {
+            let {src, action, workPCD} = data
+            let projectInd = [];
+            mineInd(state.projects, workPCD.projectId, 'superId', projectInd);
 
+            let versionInd = [];
+            mineInd(state.projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
+
+            switch(action) {
+              case 'ADD':
+              state.projects[projectInd[0]].versions[versionInd[0]].illustrations.push(src);
+              break
+              case 'REMOVE': 
+              state.projects[projectInd[0]].versions[versionInd[0]].illustrations = state.projects[projectInd[0]].versions[versionInd[0]].illustrations.filter(el => el !== src);
+              break
+            }
+            console.log('%c%s', 'color: pink; font-size: 24px;', 'UPDATED_ILLUS:', state.projects[projectInd[0]].versions[versionInd[0]].illustrations)
+          })()
+          break;
+          default:
         }
         return state;
       })()
@@ -334,14 +380,35 @@ export default (state = defState, action) => {
           mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd);
         
           if(payload) { // setMe
-            let meId = state.personObj.userData.superId
-            state.projects[projectInd[0]].versions[versionInd[0]].master = meId;
-            state.availablePayload = meId;
+            let myNickName = state.personObj.userData.nickName
+            state.projects[projectInd[0]].versions[versionInd[0]].master = myNickName;
+            state.availablePayload = myNickName;
           } else { // unsetMe
             state.projects[projectInd[0]].versions[versionInd[0]].master = null;
             state.availablePayload = null;
           }
         state.workBranch.v = 'a'+random;
+        return state
+      })()
+
+    case 'SET_ILLUSTRATIONS':  // этот элемент вызывается юзером на прямую.
+      return (() => {
+        const {src, action, sender, projectId} = payload;
+        let projectInd = [];
+        mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd);
+
+        let versionInd = [];
+        mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd);
+
+          switch(action) {
+            case 'ADD': 
+            state.projects[projectInd[0]].versions[versionInd[0]].illustrations.push(src);
+            break;
+            case 'REMOVE': 
+            state.projects[projectInd[0]].versions[versionInd[0]].illustrations = state.projects[projectInd[0]].versions[versionInd[0]].illustrations.filter(el => el !== src);
+            break
+          }
+          state.workBranch.v = 'i'+random;
         return state
       })()
     // case 'OPEN_PROJECT_CREATOR': 
@@ -432,7 +499,7 @@ export default (state = defState, action) => {
     return (() => {
       
       console.log('PAYLOD:', payload);
-      const {data: {label, mainPart, comment, artsDesription, branchDirection, answers}, selectedType} = payload;
+      const {data: {label, mainPart, comment, artsDesription, branchDirection, answers, artSrc}, selectedType} = payload;
       
       let realWorkBranch = state.workBranch.branch;
       let currentHeight = state.workPCD[state.workPCD.workVersion].height;
@@ -447,7 +514,7 @@ export default (state = defState, action) => {
           main: mainPart,
           comment,
           picture: {
-            src: null,
+            src: artSrc,
             alt: artsDesription
           }
         }
@@ -493,7 +560,7 @@ export default (state = defState, action) => {
           main: mainPart,
           comment,
           picture: {
-            src: null,
+            src: artSrc,
             alt: artsDesription
           }
         };
@@ -535,7 +602,7 @@ export default (state = defState, action) => {
           main: mainPart,
           comment,
           picture: {
-            src: null,
+            src: artSrc,
             alt: artsDesription,
           }
         }]
@@ -557,7 +624,8 @@ export default (state = defState, action) => {
     })();
 
     case 'CHANGE_BRANCH': //wb.v--
-    //payload = 0
+    // перемещения при выборе ответа на вопрос и отлетании на предыдущий вопрос
+    // payload = 0
     
     return (() => {
       if(payload === 'back') {

@@ -1,6 +1,13 @@
 import io from 'socket.io-client'
 import store from '@/store';
-import {updateUsers, updateApplicantList, addFriend, accessControl, updateData, setMaster} from '@/actions'
+import {
+  updateUsers, 
+  updateApplicantList, 
+  addFriend, 
+  accessControl, 
+  updateData, 
+  setIllustrations,
+  setMaster} from '@/actions'
 
 import {openNotification} from '@/utils'
 
@@ -24,7 +31,7 @@ socket
   .on('FORBIDDEN', () => {
     console.log('%c%s', 'color: darkred; font-size: 22px;', 'GET_FORBIDDEN')
   })
-  .on('VERSION_UPDATE', (pass) => {
+  .on('VERSION_UPDATE', (pass) => { // добавь фильтровалку по сендеру
     store.dispatch(updateData({data: pass, address:'versions'})) 
     console.log('GG_WP')
     console.log('%c%s','color: indigo; font-size: 22px;','VERSION_UPDATE_PASS: ', pass)
@@ -76,6 +83,10 @@ socket
     debugger
     const {main: {personObj: {userData: {superId}}}} =  store.getState();
     superId !== sender && store.dispatch(updateData({data: {person, workPCD, pass}, address: 'available'}));
+  })
+  .on('NEW_ILLUSTRATIONS', ({person, workPCD, src, action, sender}) => {
+    const {main: {personObj: {userData: {superId}}}} =  store.getState();
+    superId !== sender && store.dispatch(updateData({data: { person, src, action, workPCD}, address: 'illustrations'}))
   })
 let lastV = null;
 
@@ -201,6 +212,11 @@ store.subscribe(() => {
         })
       })()
       break;
+      // case 'i':  //Сокет вылетает вместе axios запросом, вернее на его калбеке;
+      // (() => {
+      //   socket.emit('UPDATE_ILLUSTRATIONS')
+      // })()
+      break
       case 'f':
       (() => {
 

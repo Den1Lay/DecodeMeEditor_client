@@ -4,14 +4,14 @@ import { Tag, Upload, message } from 'antd';
 
 import { InboxOutlined } from '@ant-design/icons';
 
-import {Mentions} from '@/components';
+import {Mentions, Button} from '@/components';
 
 import './ArtPart.scss'
 
 const { CheckableTag } = Tag;
 const { Dragger } = Upload;
 
-const ArtPart = ({value, row, mentionsHandler, fileHandler, artSrc}) => {
+const ArtPart = ({value, row, mentionsHandler, fileHandler, artSrc, illustrations, setArtSrc}) => {
   const wrapperRef = useRef(null);
   const pictureRef = useRef(null)
   const [workPlace, setWorkPlace] = useState('description');
@@ -40,7 +40,13 @@ const ArtPart = ({value, row, mentionsHandler, fileHandler, artSrc}) => {
       
 
     }
-  })
+  });
+
+  function chooseFromExist() {
+    console.log('CHOOSE_FROM_EXIST');
+    setArtSrc(illustrations[0]) // сделать здесь полноценные редактор пикч.
+  } 
+
   return (
     <div className='artPart'>
       <div ref={wrapperRef} className='artPart__main'>
@@ -54,7 +60,10 @@ const ArtPart = ({value, row, mentionsHandler, fileHandler, artSrc}) => {
         <div  className={classNames('artPart__main_picture','artPart__main_picture'+(workPlace==='picture'?'-show':'-hide'))}>
           { typeof artSrc === 'string'
             ? <img ref={pictureRef} width={sizes.width} height={sizes.height} src={artSrc} />
-            : <input type='file' onChange={fileHandler} />
+            : <div className='artPart__main_picture_inputs'>
+                <input type='file' onChange={fileHandler} />
+                <Button clickHandler={chooseFromExist}>Choose from exists</Button>
+              </div>
           }
         </div>
       </div>

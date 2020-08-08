@@ -54,6 +54,10 @@ export const addFriend = payload => ({
   type: 'ADD_FRIEND',
   payload
 })
+export const setIllustrations = payload => ({
+  type: 'SET_ILLUSTRATIONS',
+  payload
+})
 // export const openProjectSetup = () => ({
 //   type: 'OPEN_PROJECT_SETUP'
 // })

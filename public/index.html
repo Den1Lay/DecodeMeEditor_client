@@ -18,6 +18,12 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-
+    <script>
+      let checkIsMobileURL = /mobile/g.test(window.location.href)
+      if(localStorage.isMobile === "true" && !checkIsMobileURL) {
+        debugger
+        window.location.replace('http://127.0.0.1:3000/mobile')
+      }
+    </script>
   </body>
 </html>
