@@ -24,7 +24,7 @@ const projects = [{
   comment: 'Init',
   date: format(new Date(), "yyyy-MM-dd"),
   superId: 'uuid12',
-  available: false,
+  master: 'NickName',
   data: {
     pos: "0",
     branch: {
@@ -59,6 +59,7 @@ const defState = {
   // currentVersion: 0,
   // currentHeight: 0,
   // workProject: 0,
+  availablePayload: null,
   users: [], // all exist users
   personObj: null, // Всегда можно найти себя по этому адресу..
   friends: [],
@@ -90,7 +91,7 @@ export default (state = defState, action) => {
           comment: 'Init',
           date,
           superId: v4(),
-          available: false,
+          master: null,
           data: {
             pos: "0",
             branch: {
@@ -200,19 +201,61 @@ export default (state = defState, action) => {
     case 'UPDATE_DATA': 
       // {payload, address, dlsInfo} = payload
       debugger
-      return (() => {
+      return (() => { // отрабатывает при пике юзера в социальном компоненте
         let {data, address, dls} = payload;
         switch(address) {
           case 'friend':
-            let {userData, projects} = data;
-            let friendInd = [];
-            mineInd(state.friends, userData.superId, ['userData','superId'], friendInd);
-            state.friends[friendInd[0]].projects = projects;
+            (() => {
+              let {userData, projects} = data;
+              let friendInd = [];
+              mineInd(state.friends, userData.superId, ['userData','superId'], friendInd);
+              state.friends[friendInd[0]].projects = projects;
+              state.friendV = random;
+            })()
           break;
           case 'projects':
+            (() => {
+            })()
           break;
           case 'versions':
+            (() => {
+              let {person, projectId, versionId, workVersion} = data
+              // Если ты находишь в другом проекте или версии...
+              // update version;
+              let projectInd = [];
+              mineInd(state.projects, projectId, 'superId', projectInd);
+
+              let versionInd = [];
+              mineInd(state.projects[projectInd[0]].versions, versionId, 'superId', versionInd);
+
+              state.projects[projectInd[0]].versions[versionInd[0]].data = workVersion; 
+              // нужно ли обновлять workBranch? Da
+              let realProjectInd = [];
+              mineInd(state.projects, state.workPCD.projectId, 'superId', realProjectInd);
+              let realVersionInd = [];
+              mineInd(state.projects[realProjectInd[0]].versions, state.workPCD.workVersion, 'superId', realVersionInd);
+              state.workBranch = state.projects[realProjectInd[0]].versions[realVersionInd[0]].data;
+
+              let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+              pathReducer(path, state);
+              state.workBranch.v = random;
+            })()
           break;
+          case 'available': 
+          return (() => {
+            // ПРодумай как фильтрить это..
+            let {person, workPCD, pass} = data;
+            let projectInd = [];
+            mineInd(state.projects, workPCD.projectId, 'superId', projectInd);
+    
+            let versionInd = [];
+            mineInd(state.projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
+
+            state.projects[projectInd[0]].versions[versionInd[0]].master = pass;
+            return state
+          })()
+          default:
+
         }
         return state;
       })()
@@ -258,19 +301,47 @@ export default (state = defState, action) => {
           if(!freshCopy.includes(myId) && !freshCopy.includes('all')) {
             openNotification({type: 'warning', message: "Lose access", description: `From ${payload.pass.nickName}`})
           }
+          if(state.workPerson === superId) {
+
+          }
           break
 
           case 'SUPER_KICK':
           state.friends[friendInd[0]].projects[projectInd[0]].superAccess = all
-          ? accessCopy.filter(id => id !== 'all')
-          : accessCopy.filter(id => id !== myId);
+          ? superAccessCopy.filter(id => id !== 'all')
+          : superAccessCopy.filter(id => id !== myId);
           let freshSuperCopy = state.friends[friendInd[0]].projects[projectInd[0]].access;
           if(!freshSuperCopy.includes(myId) && !freshSuperCopy.includes('all')) {
             openNotification({type: 'warning', message: "Lose super access", description: `From ${payload.pass.nickName}`})
+          } 
+          if(state.workPerson === superId) {
+            // принять меры которые вводят ограничения на редактирование, если 
           }
+          
           break
+          default:
+            
         }
         state.accessV = random;
+        return state
+      })();
+    case 'CHANGE_MASTER':
+      debugger
+      return (() => {
+        let projectInd = [];
+          mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd);
+          let versionInd = [];
+          mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd);
+        
+          if(payload) { // setMe
+            let meId = state.personObj.userData.superId
+            state.projects[projectInd[0]].versions[versionInd[0]].master = meId;
+            state.availablePayload = meId;
+          } else { // unsetMe
+            state.projects[projectInd[0]].versions[versionInd[0]].master = null;
+            state.availablePayload = null;
+          }
+        state.workBranch.v = 'a'+random;
         return state
       })()
     // case 'OPEN_PROJECT_CREATOR': 
@@ -758,10 +829,9 @@ export default (state = defState, action) => {
         } else {
           state.workPCD = null
           state.workBranch.branch = {};
-          
           state.mainPlace = 'beginner'
         }
-      state.workBranch.v = random
+      state.workBranch.v = 'c'+random
         return state;
       })()
     case 'CHOOSE_PERSON':
@@ -804,7 +874,7 @@ export default (state = defState, action) => {
           state.mainPlace = 'choose'
         }
         state.workPerson = payload;
-        state.workBranch.v = 'с'+random;
+        state.workBranch.v = 'c'+random;
         return {
           ...state
         }
@@ -893,36 +963,44 @@ export default (state = defState, action) => {
           })
           state.projects = state.friends[friendInd].projects; /// прокинуты проекты
 
-          let projectInd;
-          state.projects.forEach(({superId}, i) => {
-            if(lastProject === superId) {
-              projectInd = i;
+          if(lastProject !== null) { // ЕСть с чем работать.
+            let projectInd;
+            state.projects.forEach(({superId}, i) => {
+              if(lastProject === superId) {
+                projectInd = i;
+              }
+            })
+            
+            // let PCDInd;
+            // state.projectsCoordData.forEach(({projectId}, i) => {
+            //   if(lastProject === projectId) {
+            //     PCDInd = i;
+            //   }
+            // });
+
+            state.workPCD = state.projectsCoordsData[projectsCoordInd]; // прокинуты workPCD
+
+            let versionInd;
+            state.projects[projectInd].versions.forEach(({superId}, i) => {
+              if(superId === state.workPCD.workVersion) {
+                versionInd = i;
+              }
+            })
+            
+            state.workBranch = state.projects[projectInd].versions[versionInd].data  // прокинут ворк бренч.
+            let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+
+            while(path.length) {
+              state.workBranch = state.workBranch.branch['q'+path[0]];
+              path = path.substring(1);
             }
-          })
-          
-          // let PCDInd;
-          // state.projectsCoordData.forEach(({projectId}, i) => {
-          //   if(lastProject === projectId) {
-          //     PCDInd = i;
-          //   }
-          // });
-
-          state.workPCD = state.projectsCoordsData[projectsCoordInd]; // прокинуты workPCD
-
-          let versionInd;
-          state.projects[projectInd].versions.forEach(({superId}, i) => {
-            if(superId === state.workPCD.workVersion) {
-              versionInd = i;
-            }
-          })
-          
-          state.workBranch = state.projects[projectInd].versions[versionInd].data  // прокинут ворк бренч.
-          let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
-
-          while(path.length) {
-            state.workBranch = state.workBranch.branch['q'+path[0]];
-            path = path.substring(1);
+          } else {
+            state.workPCD = null;
+            state.workBranch.branch = {};
+            state.mainPlace = 'choose'
           }
+
+          
           
           // for(let k=0;k<friends.length;k++) {
           //   if(friends[k])

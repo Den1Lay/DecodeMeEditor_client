@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react'
 import {connect} from 'react-redux'
 import {socket} from '@/core'
+import store from '@/store'
 
 import {Input, Button, AddToCompadre} from '@/components';
 import {Select} from 'antd'
@@ -10,14 +11,13 @@ import {choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData
 
 const {Option} = Select
 
-const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantList, updateData, previewPerson, updateUsers}) => {
+const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantList, updateData, workPerson, previewPerson, updateUsers}) => {
   debugger
   // возможность работать с челом в зависимости от доступов с его стороны...
   const [person, setPerson] = useState(null);
   const [personDetail, setPersonDetail] = useState(null);
   const [users, setUsers] = useState(null);
   const [newComrade, setNewComrade] = useState([]);
-  const [intObj, setIntObj] = useState(null)
 
   let isFriend = person ? person.friends.some(({superId:personId}) => personId === superId) : null;
 
@@ -46,6 +46,16 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
         setNewComrade(comrades)
       })
     };
+    return function() {
+      debugger
+      // по фа
+
+      const {main: {mainPlace, workPerson, personObj: {userData: {superId}}}} = store.getState();
+      if(person && superId === workPerson && mainPlace !== 'social') {
+        socket.emit('UNSUBSCRIBE_USER', {token: localStorage.token, personId: person.superId});
+      }
+
+    }
   })
 
   function onSelectUser(nickName) {
@@ -77,9 +87,8 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
   let availableProjects = personDetail && personDetail.projects.filter( ({access}) => access.includes(superId) || access.includes('all') )
 
   function chooseHandler() {
-    debugger
-    if(availableProjects.length) {
-      isFriend && choosePerson(person.superId);
+    if(availableProjects.length && isFriend) {
+      choosePerson(person.superId);
       //!isFriend && previewPerson(personDetail);
     } else {
       openNotification({type: 'warning', message: 'Restriction', description: 'The user must have at least one project'})
@@ -88,8 +97,10 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
   function addCompadreHandl(superId) {
     socket.emit('ACCEPT_REQUEST', {token:localStorage.token, personId: superId});
     cleanApplicantList(superId);
-    setNewComrade(newComrade.filter(({superId:personId}) => personId !== superId ))
+    setNewComrade(newComrade.filter(({superId:personId}) => personId !== superId ));
   }
+
+  let postData = new FormData();
 
   let personDetailIsLoaded = personDetail && (personDetail.userData.superId === person.superId);
 
@@ -176,7 +187,7 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
   )
 }
 
-export default connect(({main: {friends, personObj: {userData: {superId, applicantList}}, accessV}}) => ({
-  friends, superId, applicantList, L: applicantList.length, fL: friends.length, accessV
+export default connect(({main: {friends, personObj: {userData: {superId, applicantList}}, accessV, workPerson, friendV}}) => ({
+  friends, superId, applicantList, L: applicantList.length, fL: friends.length, workPerson, accessV, friendV
 }), 
 {choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData})(Social)

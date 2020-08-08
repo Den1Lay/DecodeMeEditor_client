@@ -1,9 +1,9 @@
 import io from 'socket.io-client'
 import store from '@/store';
-import {updateUsers, updateApplicantList, addFriend, accessControl} from '@/actions'
+import {updateUsers, updateApplicantList, addFriend, accessControl, updateData, setMaster} from '@/actions'
 
 import {openNotification} from '@/utils'
-import operNotification from '../utils/notification';
+
 
 const socket = io('http://localhost:4040', {
   transports: ['polling']
@@ -25,6 +25,7 @@ socket
     console.log('%c%s', 'color: darkred; font-size: 22px;', 'GET_FORBIDDEN')
   })
   .on('VERSION_UPDATE', (pass) => {
+    store.dispatch(updateData({data: pass, address:'versions'})) 
     console.log('GG_WP')
     console.log('%c%s','color: indigo; font-size: 22px;','VERSION_UPDATE_PASS: ', pass)
   })
@@ -69,6 +70,13 @@ socket
     store.dispatch(addFriend(user));
     
   })
+  .on('NEW_AVAILABLES', ({person, workPCD, payload: pass, sender}) => {
+    // wtf а как фильтрить?
+    // можно фильтрить по сэндеру === personObj.superId? ГО
+    debugger
+    const {main: {personObj: {userData: {superId}}}} =  store.getState();
+    superId !== sender && store.dispatch(updateData({data: {person, workPCD, pass}, address: 'available'}));
+  })
 let lastV = null;
 
 // if(!localStorage.token && ) {
@@ -82,23 +90,24 @@ store.subscribe(() => {
   //   })
   // }
   if(lastV !== freshState.main.workBranch.v) {
-    console.log('%c%s', 'color: royalblue; font-size: 22px;', "DEBUG_STATE: ",freshState );
-    let {main:{projectsCoordsData: pcd, workBranch: {v}, workPerson: person, workPCD, projects, personObj}} = freshState
+    console.log('%c%s', 'color: royalblue; font-size: 22px;', "DEBUG_STATE: ", freshState);
+    let {main:{projectsCoordsData: pcd, workBranch: {v}, workPerson: person, workPCD, projects, personObj, availablePayload: avPayload}} = freshState
     let token = localStorage.token;
     let project = freshState.main.projects ? freshState.main.projects[0] : null;
-    let myLastProject = personObj.userData.myLastProject
-    switch(v[0]) {
-      case 'c': 
-      debugger
+    let myLastProject = personObj.userData.myLastProject;
+    debugger
+    let checkSimbol = (v+'').substring(0, 1);
+    switch(checkSimbol) {
+      case "c": 
       //coord change handl;
       socket.emit('UPDATE_PCD', {
         token, pcd, person, 
-        lastProject: workPCD.projectId, 
+        lastProject: workPCD ? workPCD.projectId : null, 
         myLastProject,
         friends: personObj.userData.friends
       })
       break;
-      case 'p':
+      case "p":
       // exist project change handl
       socket.emit('UPDATE_PROJECTS', {
         token, pcd, workVersion: (() => {
@@ -179,6 +188,16 @@ store.subscribe(() => {
           superKicked,
           newObservers,
           newEditord
+        })
+      })()
+      break;
+      case 'a':
+      (() => {
+        socket.emit('UPDATE_AVAILABLE', {
+          token: localStorage.token, 
+          workPCD, 
+          person, 
+          payload: avPayload
         })
       })()
       break;

@@ -74,6 +74,10 @@ export const changeBranch = payload => ({
   type: "CHANGE_BRANCH",
   payload
 })
+export const changeMaster = payload => ({
+  type: 'CHANGE_MASTER',
+  payload
+})
 
 export const loginIn = () => ({
   type: 'LOGIN_IN'

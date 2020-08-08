@@ -3,13 +3,17 @@
 import React, {useState, useEffect} from 'react'
 import {connect} from 'react-redux'
 import classNames from 'classnames'
+import {v4} from 'uuid'
 
-import {Mentions, Button, Input, Answers} from '@/components'
+import {Mentions, Button, Input, Answers, ArtPart} from '@/components'
 import {Dropdown, Menu} from 'antd'
+import {mineInd} from '@/utils'
 
-import {savePod, changeBranch} from '@/actions'
+import {savePod, changeBranch, changeMaster} from '@/actions' 
 
-const Editor = ({savePod, workBranch, currentHeight, changeBranch, fakeBranch, faceCH}) => {
+import {axios} from '@/core'
+
+const Editor = ({savePod, workBranch, currentHeight, changeBranch, v, master, superId, changeMaster, fakeBranch, faceCH}) => {
   // проверка на сохранение...
   const [selectedType, setSelectedType] = useState('0'); // 0: POD, 1: QUESTION
   const [data, setData] = useState({
@@ -27,10 +31,10 @@ const Editor = ({savePod, workBranch, currentHeight, changeBranch, fakeBranch, f
 useEffect(() => {
   debugger
   let currentPath = workBranch.pos;
-  const {checkHeight, checkPath} = checkCoord;
-  if(workBranch.branch.base && ((currentHeight !== checkHeight) || (currentPath !== checkPath))) {
+  const {checkHeight, checkPath, checkV} = checkCoord;
+  if(workBranch.branch.base && ((currentHeight !== checkHeight) || (currentPath !== checkPath) || (v !== checkV))) {
     let dataSource = currentHeight !== 'question' ? workBranch.branch.base[currentHeight] : workBranch.branch.question;
-      const {label, main, comment, picture: {alt}} = dataSource;  
+      const {label, main, comment, picture: {src, alt}} = dataSource;  
       let answers = [
         { content: '', key: '0', closable: false, ref: ''},
         { content: '', key: '1', closable: false, ref: ''},
@@ -54,40 +58,70 @@ useEffect(() => {
         mainPart: main, 
         comment, 
         artsDesription: alt,
+        artSrc: src,
         answers,
         activeKey: "0",
         branchDirection: workBranch.branch.branchDirection})
-        setCheckCoord({checkHeight: currentHeight, checkPath: currentPath});
+        setCheckCoord({checkHeight: currentHeight, checkPath: currentPath, checkV: v});
       setSelectedType(currentHeight !== 'question' ? "0" : "1");
       setSaveState(workBranch.v)
   }
 })
   
-  const menu = (
-    <div className='editorsMenu'>
-      <Menu 
-      onSelect={({key}) => {
-        console.log('EVE', key)
-        setSelectedType(key)
-        //setData({...data, answers: Array(8).fill('').map((el, i) => i)});
-      }}
-      defaultSelectedKeys={[selectedType]}>
-      <Menu.Item key={'0'}>
-        POD
-      </Menu.Item>
-      <Menu.Item key={'1'}>QUESTION</Menu.Item>
-    </Menu>
-    </div>
-  );
+  let masterHere = master === superId;
 
-  const {label, mainPart, comment, artsDesription, branchDirection, answers, activeKey} = data;
+  function masterHandl() {
+
+  }
+
+  function eventHandl() {
+    setSaveState(false);
+    !masterHere && changeMaster(true);
+  }
+
+  function fileHandler(ev) {
+    ev.persist();
+    debugger
+    let formData = new FormData();
+    let workFile = ev.target.files[0];
+    let dataType = workFile.name.substring(0).split('.');
+    let newName = `${v4()}.${dataType[dataType.length-1]}`;
+    formData.append('picture', workFile, workFile.name);
+    console.log('PICTURE:', ev.target.files[0])
+    axios.post('/image', formData, {
+      headers: { 'Content-Type': "multipart/form-data", 'newname': newName}
+    }).then(({data: src}) => {
+      console.log('RES_DATA:', src)
+      setData({...data, artSrc: src })
+    })
+  }
+  // const menu = (
+  //   <div className='editorsMenu'>
+  //     <Menu 
+  //     onSelect={({key}) => {
+  //       console.log('EVE', key)
+  //       setSelectedType(key)
+  //       //setData({...data, answers: Array(8).fill('').map((el, i) => i)});
+  //     }}
+  //     defaultSelectedKeys={[selectedType]}>
+  //     <Menu.Item key={'0'}>
+  //       POD
+  //     </Menu.Item>
+  //     <Menu.Item key={'1'}>QUESTION</Menu.Item>
+  //   </Menu>
+  //   </div>
+  // );
+
+  const [image, setImage] = useState(null)
+
+  const {label, mainPart, comment, artsDesription, branchDirection, answers, activeKey, artSrc} = data;
   return (
     <>
       <div className='editor__left'>
         <div style={{display: 'flex'}}>
           <div className='editor__left_dropMenu'>
           <Button clickHandler={() => {
-             currentHeight !== null && (workBranch.branch.choseCount === 0 || currentHeight === 'question') && (() => {setSelectedType(selectedType === '0' ? "1" : "0");setSaveState(false)})();
+             currentHeight !== null && (workBranch.branch.choseCount === 0 || currentHeight === 'question') && (() => {setSelectedType(selectedType === '0' ? "1" : "0"); eventHandl()})();
           }}>
             {selectedType === '0' ? "POD" : "QUESTION"}
           </Button>
@@ -102,18 +136,18 @@ useEffect(() => {
             {/* <Dropdown /> */}
           </div>
           <div className='editor__left_label'>
-            <Input value={label} placeholder='Label' changeHandler={(ev) => {ev.persist(); setData({...data, label: ev.target.value}); setSaveState(false)}} />
+            <Input value={label} placeholder='Label' changeHandler={(ev) => {ev.persist(); setData({...data, label: ev.target.value}); eventHandl()}} />
           </div>
         </div>
         <div className='editor__left_dialog'>
-          <Mentions value={mainPart} row={10} placeholder='Main part' changeHandler={ev => {setData({...data, mainPart: ev}); setSaveState(false)}}/>
+          <Mentions value={mainPart} row={10} placeholder='Main part' changeHandler={ev => {setData({...data, mainPart: ev}); eventHandl()}}/>
         </div>
         <div className='editor__left_comment'>
-          <Mentions value={comment} row={6} placeholder='Comment/analysis' changeHandler={ev => {setData({...data, comment: ev}); setSaveState(false)}}/>
+          <Mentions value={comment} row={6} placeholder='Comment/analysis' changeHandler={ev => {setData({...data, comment: ev}); eventHandl()}}/>
         </div>
         <div className={classNames('editor__left_tabs','editor__left_tabs'+ (selectedType === '1' ? '-show' : '-hide'))}>
           <Answers 
-            setAnswers={({activeKey, panes: answers}) => {setData({...data, answers, activeKey}); setSaveState(false)}} 
+            setAnswers={({activeKey, panes: answers}) => {setData({...data, answers, activeKey}); eventHandl()}} 
             setActiveKey={({activeKey}) => setData({...data, activeKey})}  
             value={{panes: answers, activeKey}}/>
           {workBranch.branch['q'+activeKey] && saveState && 
@@ -125,22 +159,41 @@ useEffect(() => {
 
       <div className='editor__right'>
         <div style={{display: 'flex'}}>
-          <div className='editor__right_space'>
-          
+          <div className='editor__right_master'>
+            <div className='editor__right_master_status'>
+              {`M: ${master}`}
+            </div>
+            <div className='editor__right_master_btn'>
+              <Button clickHandler={masterHandl}>
+                {master === null 
+                ? "Stay master" 
+                : master === superId 
+                  ? "Give away right" 
+                  : "Request the right"}
+              </Button>
+            </div>
           </div>
-          <div className='editor__right_saveInfo'>{!saveState && <div>*</div>}</div>
-          <div className='editor__right_createBtn'>
-          
-            <Button clickHandler={() => {savePod({selectedType, data}); setSaveState(true)}}>
-              SAVE
-            </Button>
-          </div>
+          <div className='editor__right_save'>
+            <div className='editor__right_save_info'>{!saveState && <div>*</div>}</div>
+            <div className='editor__right_save_btn'>
+              <Button clickHandler={() => {savePod({selectedType, data}); setSaveState(true)}}>
+                SAVE
+              </Button>
+            </div>
+          </div>  
         </div>
         <div className='editor__right_dialog'>
-          <Mentions value={artsDesription} row={10} placeholder={`Arts description`} changeHandler={ev => {setData({...data, artsDesription: ev}); setSaveState(false)}}/>
+          <ArtPart 
+            artSrc={artSrc}
+            value={artsDesription} 
+            row={10} 
+            mentionsHandler={ev => {setData({...data, artsDesription: ev}); eventHandl()}}
+            fileHandler={fileHandler}
+            />
+          {/* <Mentions  row={10} placeholder={`Arts description`} changeHandler={}/> */}
         </div>
         <div className='editor__right_branchDir'>
-          <Mentions value={branchDirection} row={6} placeholder={`Branches direction`} changeHandler={ev => {setData({...data, branchDirection: ev}); setSaveState(false)}}/>
+          <Mentions value={branchDirection} row={6} placeholder={`Branches direction`} changeHandler={ev => {setData({...data, branchDirection: ev}); eventHandl()}}/>
         </div>
         <div className={classNames('editor__right_metaData', 'editor__right_metaData'+(selectedType === '1' ? '-show' : '-hide'))}>
           <Mentions disabled={true} row={6} placeholder={`Meta data`}/>
@@ -150,8 +203,19 @@ useEffect(() => {
   )
 }
 
-export default connect(({main: {workBranch, workPCD}}) => ({
+export default connect(({main: {workBranch, workPCD, projects, personObj}}) => ({
+  master: (() => {
+    if(workPCD !== null) {
+      let projectInd = [];
+      mineInd(projects, workPCD.projectId, 'superId', projectInd);
+
+      let versionInd = [];
+      mineInd(projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
+      return projects[projectInd[0]].versions[versionInd[0]].master
+    }
+  })(),
+  superId: personObj.userData.superId,
   workBranch, 
   v: workBranch.v,
-  currentHeight: workPCD ? workPCD[workPCD.workVersion].height : null
-}), {savePod, changeBranch})(Editor)
+  currentHeight: workPCD ? workPCD[workPCD.workVersion].height : null,
+}), {savePod, changeBranch, changeMaster})(Editor)

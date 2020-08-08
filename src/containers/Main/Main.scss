@@ -2,18 +2,6 @@
 // сделать анимацию максимально плавной за счет anime js
 // МОжет немного рефакторинга? После всех Main компонентов
 @import '@/styles/variables';
-@mixin vision {
-  &-show {
-    opacity: 1;
-    z-index: 1;
-    transition: opacity 0.7s ease-in-out;
-  }
-  &-hide {
-    opacity: 0;
-    z-index: -2;
-    transition: opacity 0.7s ease-in-out;
-  }
-}
 
 // .editorsMenu {
 //   border: 1px solid $grey !important;
@@ -80,16 +68,32 @@
     flex: 6;
     flex-direction: column;
     &_space {
+      flex: 10;
+    }
+    &_master {
       flex: 12;
+      display: flex;
+      align-items: baseline;
+      &_status {
+        flex: 5;
+      }
+      &_btn {
+        flex: 1;
+        margin: 1.3vh 0 0 1.3vh;
+      }
     }
-    &_createBtn {
+    &_save {
       flex: 3;
-      margin: 1.3vh 1.3vh 0 0 ;
-    }
-    &_saveInfo {
-      flex:0.3;
-      margin: 1.3vh 0.3vh 0 0;
-      color: $grey;
+      display: flex;
+      &_info {
+        flex:0.3;
+        margin: 1.3vh 0.65vh 0 0.65vh;
+        color: $grey;
+      }
+      &_btn {
+        flex: 3;
+        margin: 1.3vh 1.3vh 0 0 ;
+      }
     }
     &_dialog {
       margin: 1.3vh;

@@ -21,6 +21,7 @@ export {chooseMe} from './main'
 export {addFriend} from './main'
 export {updateData} from './main'
 export {accessControl} from './main'
+export {changeMaster} from './main'
 
 export {fetchUserData} from './network'
 export {userLogin} from './network'
