@@ -2,20 +2,23 @@ import React, {useRef, useEffect, useState} from 'react';
 import {connect} from 'react-redux';
 import classNames from 'classnames';
 
-import {fetchUserData, userLogin} from '@/actions'
+import {fetchUserData, userLogin, autoLoginWithToken} from '@/actions'
 
 import {Button} from '@/components';
 
 import './Login.scss'
 
-const Login = ({fetchUserData, userLogin}) => {
+const Login = ({fetchUserData, userLogin, autoLoginWithToken}) => {
   const login = useRef(null)
   const [show, setShow] = useState(true)
 
   useEffect(() => {
-    login.current.addEventListener('transitionend', () => {
-      console.log('Transition end')
-    })
+    // login.current.addEventListener('transitionend', () => {
+    //   console.log('Transition end')
+    // })
+    // 
+    debugger
+    localStorage.token && autoLoginWithToken()
   })
 
   function loginHandl() {
@@ -37,4 +40,4 @@ const Login = ({fetchUserData, userLogin}) => {
   )
 }
 
-export default connect(({}) => ({}), {fetchUserData, userLogin})(Login)
+export default connect(({}) => ({}), {fetchUserData, userLogin, autoLoginWithToken})(Login)

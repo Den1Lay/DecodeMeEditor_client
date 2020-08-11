@@ -46,7 +46,7 @@ useEffect(() => {
   debugger
   let currentPath = workBranch.pos;
   const {checkHeight, checkPath, checkV} = checkCoord;
-  if(workBranch.branch.base && ((currentHeight !== checkHeight) || (currentPath !== checkPath) || (v !== checkV))) {
+  if(workBranch.branch.base && ((currentHeight !== checkHeight) || (currentPath !== checkPath) || (v !== checkV && v[0] !== 'a'))) {
     let dataSource = currentHeight !== 'question' ? workBranch.branch.base[currentHeight] : workBranch.branch.question;
       const {label, main, comment, picture: {src, alt}} = dataSource;  
       let answers = [
@@ -72,7 +72,7 @@ useEffect(() => {
         mainPart: main, 
         comment, 
         artsDesription: alt,
-        artSrc: illustrations.includes(src) ? src : null,
+        artSrc: illustrations.some(({src: baseSrc}) => baseSrc === src) ? src : null,
         answers,
         activeKey: "0",
         branchDirection: workBranch.branch.branchDirection})
@@ -82,15 +82,23 @@ useEffect(() => {
   }
 })
   
-  let masterHere = master === nickName;
+  let noMaster = master === null;
 
   function masterHandl() {
-
+    noMaster && changeMaster(true);
+    if(master === nickName) {
+      changeMaster(false)
+    } else {
+      // masterRequst   
+      socket.emit('REQUEST_RIGHT', {token: localStorage.token, person})
+    }
+    
   }
 
-  function eventHandl() {
+  function eventHandl(cb = null) {
     setSaveState(false);
-    !masterHere && changeMaster(true);
+    noMaster && changeMaster(true);
+    cb && cb()
   }
 
   function fileHandler(ev) {
@@ -101,13 +109,14 @@ useEffect(() => {
     let dataType = workFile.name.substring(0).split('.');
     let newName = `${v4()}.${dataType[dataType.length-1]}`;
     formData.append('picture', workFile, workFile.name);
-    console.log('PICTURE:', ev.target.files[0])
+    console.log('%c%s', 'color: blue; font-size: 33px;','PICTURE:', ev.target.files[0].name)
     axios.post('/image', formData, {
       headers: { 'Content-Type': "multipart/form-data", 'newname': newName}
     }).then(({data: src}) => {
       console.log('RES_DATA:', src)
-      socket.emit('SET_ILLUSTRATIONS', {token: localStorage.token, person, workPCD, src, action: 'ADD'})
-      setIllustrations({src, action: 'ADD'});
+      let newIllustration = {name: ev.target.files[0].name, src}
+      socket.emit('SET_ILLUSTRATIONS', {token: localStorage.token, person, workPCD, newIllustration, action: 'ADD'})
+      //setIllustrations({newIllustration, action: 'ADD'});
       setData({...data, artSrc: src });
       // добавить знатный денжер о всех последствиях удаления картинки
       //socket.emit отработать после всех тестов нового компонента
@@ -118,6 +127,28 @@ useEffect(() => {
     setData({...data, artSrc: pass });
     // ev.persist();
     // 
+  }
+
+  function unsetIllust() {
+    setData({...data, artSrc: null})
+  }
+
+  function setIllust(src) {
+    setData({...data, artSrc: src})
+    console.log('SET_ILLUST')
+  }
+
+  function removeIllust(src) { // Еще одно исключение??? РЕбилдни логику на съедание сендер эвента
+    setData({...data, artSrc: null});
+    let workIllust;
+    for(let picture of illustrations) {
+      if(picture.src === src) {
+        workIllust = picture
+      }
+    }
+    socket.emit('SET_ILLUSTRATIONS', {token: localStorage.token, person, workPCD, newIllustration: workIllust, action: 'REMOVE'})
+    //socket.emit('', {token: localStorage.token, })
+    console.log('REMOVE_ILLUST')
   }
   // const menu = (
   //   <div className='editorsMenu'>
@@ -135,6 +166,10 @@ useEffect(() => {
   //   </Menu>
   //   </div>
   // );
+  function typeBtnHandler() {
+    eventHandl(setSelectedType(selectedType === "0" ? "1" : "0"));
+    
+  }
 
   const [image, setImage] = useState(null)
 
@@ -145,7 +180,7 @@ useEffect(() => {
         <div style={{display: 'flex'}}>
           <div className='editor__left_dropMenu'>
           <Button clickHandler={() => {
-             currentHeight !== null && (workBranch.branch.choseCount === 0 || currentHeight === 'question') && (() => {setSelectedType(selectedType === '0' ? "1" : "0"); eventHandl()})();
+             currentHeight !== null && (workBranch.branch.choseCount === 0 || currentHeight === 'question') && typeBtnHandler();
           }}>
             {selectedType === '0' ? "POD" : "QUESTION"}
           </Button>
@@ -189,7 +224,7 @@ useEffect(() => {
             </div>
             <div className='editor__right_master_btn'>
               <Button clickHandler={masterHandl}>
-                {master === null 
+                {noMaster 
                 ? "Stay master" 
                 : master === nickName 
                   ? "Give away right" 
@@ -215,11 +250,14 @@ useEffect(() => {
             fileHandler={fileHandler}
             illustrations={illustrations}
             setArtSrc={setArtHandler}
+            unsetIllust={unsetIllust}
+            setIllust={setIllust}
+            removeIllust={removeIllust}
             />
           {/* <Mentions  row={10} placeholder={`Arts description`} changeHandler={}/> */}
         </div>
         <div className='editor__right_branchDir'>
-          <Mentions value={branchDirection} row={6} placeholder={`Branches direction`} changeHandler={ev => {setData({...data, branchDirection: ev}); eventHandl()}}/>
+          <Mentions value={branchDirection} row={7} placeholder={`Branches direction`} changeHandler={ev => {setData({...data, branchDirection: ev}); eventHandl()}}/>
         </div>
         <div className={classNames('editor__right_metaData', 'editor__right_metaData'+(selectedType === '1' ? '-show' : '-hide'))}>
           <Mentions disabled={true} row={6} placeholder={`Meta data`}/>

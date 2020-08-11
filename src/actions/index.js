@@ -26,3 +26,4 @@ export {setIllustrations} from './main';
 
 export {fetchUserData} from './network'
 export {userLogin} from './network'
+export {autoLoginWithToken} from './network'

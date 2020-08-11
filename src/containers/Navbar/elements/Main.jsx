@@ -7,7 +7,7 @@ import classNames from 'classnames'
 import {Input, Button} from '@/components'
 import {Dropdown,Menu} from 'antd'
 
-import {addProject, openPlace, selectProject, selectVersion} from '@/actions'
+import {addProject, openPlace, selectProject, selectVersion, changeMaster} from '@/actions'
 
 const Navbar_Main = (
   {
@@ -16,9 +16,10 @@ const Navbar_Main = (
     selectVersion, 
     projectId, 
     workVersion,
-    openPlace
+    openPlace,
+    changeMaster
   }) => {
-debugger
+debugger //changeMaster(false)
   //const {projectId, workVersion} = workPCD || {projectId: null, workVersion: null}
   const [showProjects, setShowProjects] = useState(false);
   const [hideDls, setHideDls] = useState(true);
@@ -111,9 +112,9 @@ debugger
         <Dropdown 
           overlay={makeMenu({
             data: projects, 
-            addHandler: () => openPlace('project'), 
+            addHandler: () => {openPlace('project')}, 
             current: projectId,
-            selectHandl: (ev) => selectProject(ev.key)})} 
+            selectHandl: (ev) => {selectProject(ev.key); changeMaster(false)}})} 
           onVisibleChange={(ev) => console.log('OnVisibleChange', ev)}>
           <div><Input place='navbar' placeholder={(projects.length && projectInd !== undefined) 
               ? projects[projectInd].name 
@@ -128,9 +129,9 @@ debugger
          ? <Dropdown 
             overlay={makeMenu({
               data:projects[projectInd].versions , 
-              addHandler: () => openPlace('version'), //ребилд | пока норм..
+              addHandler: () => {openPlace('version')}, //ребилд | пока норм..
               current: workVersion,
-              selectHandl: (ev) => selectVersion(ev.key)})}>
+              selectHandl: (ev) => {selectVersion(ev.key); changeMaster(false)}})}>
             <div><Input place='navbar' placeholder={projects[projectInd].versions[versionInd].comment}/></div>
           </Dropdown>
         : <Input place='navbar' placeholder='Nonee'/>
@@ -158,4 +159,4 @@ export default connect(
     workVersion: workPCD ? workPCD.workVersion : null,
     v: workBranch.v
   }), 
-  {addProject, openPlace, selectProject, selectVersion})(Navbar_Main)
+  {addProject, openPlace, selectProject, selectVersion, changeMaster})(Navbar_Main)

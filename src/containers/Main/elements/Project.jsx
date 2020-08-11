@@ -74,6 +74,12 @@ const [projectData, setProjectData] = useState({name: '', description: '', acces
     return superIdArr
   }
 
+  function createOrSaveHandler() {
+    //changeMaster(false)
+    isSetup && setupProject(projectData);
+    !isSetup && addProject(projectData)
+  }
+
   // let defData = selectData.access.slice()
   //   .map(({superId, nickName}) => projectData.access.includes(superId) ? nickName : null);
   // let options = selectData.access.map(({nickName, disabled}) => ({value: nickName, disabled}));
@@ -85,7 +91,7 @@ const [projectData, setProjectData] = useState({name: '', description: '', acces
         </div>
         <div className='project__upPart_space' />
         <div className='project__upPart_createBtn'>
-          <Button clickHandler={isSetup ? () => setupProject(projectData) : () => addProject(projectData)}>
+          <Button clickHandler={createOrSaveHandler}>
             {isSetup ? "SAVE" : "CREATE"}
           </Button>
         </div>

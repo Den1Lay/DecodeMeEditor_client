@@ -8,6 +8,8 @@
 // Все данные имеют обратную совместимость так что баги с невозможностью найти индекс не должные происходить...
 // Только специально обрабатываемые.. при удалении.. Тоесть только 90 % таких событий должно быть отловлено в INIT подобных событиях
 // Не подгорай :)
+
+// Логика сеттеров начала прижимать фундаментальную диспатчевую логику. О БАЛ ДЕТЬ. смотри на работу илююстраций
 import {format, startOfWeek} from 'date-fns';
 import {v4} from 'uuid'
 import FastClone from 'fastest-clone'
@@ -283,7 +285,7 @@ export default (state = defState, action) => {
           // картинки должны находится в версии а не в проекте.. 
           case 'illustrations':
           connected && (() => {
-            let {src, action, workPCD} = data
+            let {newIllust, action, workPCD} = data
             let projectInd = [];
             mineInd(state.projects, workPCD.projectId, 'superId', projectInd);
 
@@ -292,10 +294,10 @@ export default (state = defState, action) => {
 
             switch(action) {
               case 'ADD':
-              state.projects[projectInd[0]].versions[versionInd[0]].illustrations.push(src);
+              state.projects[projectInd[0]].versions[versionInd[0]].illustrations.push(newIllust);
               break
               case 'REMOVE': 
-              state.projects[projectInd[0]].versions[versionInd[0]].illustrations = state.projects[projectInd[0]].versions[versionInd[0]].illustrations.filter(el => el !== src);
+              state.projects[projectInd[0]].versions[versionInd[0]].illustrations = state.projects[projectInd[0]].versions[versionInd[0]].illustrations.filter(({src}) => src !== newIllust.src);
               break
             }
             console.log('%c%s', 'color: pink; font-size: 24px;', 'UPDATED_ILLUS:', state.projects[projectInd[0]].versions[versionInd[0]].illustrations)
@@ -393,7 +395,7 @@ export default (state = defState, action) => {
 
     case 'SET_ILLUSTRATIONS':  // этот элемент вызывается юзером на прямую.
       return (() => {
-        const {src, action, sender, projectId} = payload;
+        const {newIllustration, action, sender, projectId} = payload;
         let projectInd = [];
         mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd);
 
@@ -402,10 +404,10 @@ export default (state = defState, action) => {
 
           switch(action) {
             case 'ADD': 
-            state.projects[projectInd[0]].versions[versionInd[0]].illustrations.push(src);
+            state.projects[projectInd[0]].versions[versionInd[0]].illustrations.push(newIllustration);
             break;
             case 'REMOVE': 
-            state.projects[projectInd[0]].versions[versionInd[0]].illustrations = state.projects[projectInd[0]].versions[versionInd[0]].illustrations.filter(el => el !== src);
+            state.projects[projectInd[0]].versions[versionInd[0]].illustrations = state.projects[projectInd[0]].versions[versionInd[0]].illustrations.filter(({src}) => src !== newIllustration.src);
             break
           }
           state.workBranch.v = 'i'+random;
@@ -462,6 +464,7 @@ export default (state = defState, action) => {
         comment: payload.comment,
         date,
         superId: newVersionInd,
+        illustrations: state.projects[projectInd].versions[versionInd].illustrations,
         data: dataClone
       });
 
@@ -495,7 +498,7 @@ export default (state = defState, action) => {
       }
     })()
     case 'SAVE_POD': //wb.v
-   
+    debugger
     return (() => {
       
       console.log('PAYLOD:', payload);

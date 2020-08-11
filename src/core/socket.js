@@ -20,12 +20,12 @@ socket
   .on('connect', () => {
     console.log('%c%s', 'color: green; font-size: 23px', "REAL_SOCKET_CONNECT")
     //console.log(localStorage.token)
-    let realToken = localStorage.token;
-    realToken && socket.emit('JOIN', {token: realToken});
-    socket.on('FORB', () => {
-      console.log('%c%s', 'color: pink; font-size: 18px;', 'FORBIDDEN');
-      delete localStorage.token
-    })
+    //let realToken = localStorage.token;
+    //realToken && socket.emit('JOIN', {token: realToken});
+  })
+  .on('FORB', () => {
+    console.log('%c%s', 'color: pink; font-size: 18px;', 'FORBIDDEN');
+    delete localStorage.token
   })
   // РАБОТКА)))ы
   .on('FORBIDDEN', () => {
@@ -84,9 +84,23 @@ socket
     const {main: {personObj: {userData: {superId}}}} =  store.getState();
     superId !== sender && store.dispatch(updateData({data: {person, workPCD, pass}, address: 'available'}));
   })
-  .on('NEW_ILLUSTRATIONS', ({person, workPCD, src, action, sender}) => {
+  .on('NEW_ILLUSTRATIONS', ({person, workPCD, newIllust, action, sender}) => {
+    // Эксперитентальный подход со съеданием сендер ивента в лайв режиме.
     const {main: {personObj: {userData: {superId}}}} =  store.getState();
-    superId !== sender && store.dispatch(updateData({data: { person, src, action, workPCD}, address: 'illustrations'}))
+    store.dispatch(updateData({data: { person, newIllust, action, workPCD}, address: 'illustrations'}))
+  })
+  .on('REQUEST_RIGHT', ({sender}) => {
+    const {main: {personObj: {userData: {superId}}, friends}} = store.getState();
+    superId !== sender && (() => {
+      let nickName;
+      friends.forEach(({userData: {superId: fsID, nickName: fnN}}) => {
+        if(fsID === sender) {
+          nickName = fnN;
+          return
+        }
+      });
+      openNotification({type: 'info', message: 'Right request', description: `By ${nickName}` })
+    })()
   })
 let lastV = null;
 

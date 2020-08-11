@@ -7,11 +7,23 @@ import {Input, Button, AddToCompadre} from '@/components';
 import {Select} from 'antd'
 import {openNotification, mineInd} from '@/utils'
 
-import {choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData} from '@/actions'
+import {choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData, changeMaster} from '@/actions'
 
 const {Option} = Select
 
-const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantList, updateData, workPerson, previewPerson, updateUsers}) => {
+const Social = (
+  {
+    friends, 
+    superId, 
+    choosePerson, 
+    applicantList, 
+    cleanApplicantList, 
+    updateData, 
+    changeMaster,
+    workPerson, 
+    previewPerson, 
+    updateUsers
+  }) => {
   debugger
   // возможность работать с челом в зависимости от доступов с его стороны...
   const [person, setPerson] = useState(null);
@@ -97,6 +109,7 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
         personId: personDetail.userData.superId
       });
       socket.on('NEW_SUBSCRIBE_USER', ({friendObj}) => {
+        changeMaster(false);
         updateData({data: friendObj, address: 'friend'});
         choosePerson(person.superId);
       })
@@ -137,8 +150,8 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
               </div>
               {
                 isFriend &&
-                <div className='social__chusedUser_chuseProfile'>
-                  <Button clickHandler={() => chooseHandler()}>Choose profile</Button>
+                <div className='social__chusedUser_chuseProfile'> 
+                  <Button clickHandler={() => {chooseHandler()}}>Choose profile</Button>
                 </div> 
               }
               
@@ -204,4 +217,4 @@ const Social = ({friends, superId, choosePerson, applicantList, cleanApplicantLi
 export default connect(({main: {friends, personObj: {userData: {superId, applicantList}}, accessV, workPerson, friendV}}) => ({
   friends, superId, applicantList, L: applicantList.length, fL: friends.length, workPerson, accessV, friendV
 }), 
-{choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData})(Social)
+{choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData, changeMaster})(Social)

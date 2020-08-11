@@ -8,3 +8,5 @@ export {default as Answers} from './Answers';
 export {default as AccessSelect} from './AccessSelect';
 export {default as AddToCompadre} from './AddToCompadre';
 export {default as ArtPart} from './ArtPart'
+export {default as BoxImage} from './BoxImage'
+export {default as ImageTooltip} from './ImageTooltip';
