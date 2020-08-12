@@ -10,3 +10,4 @@ export {default as AddToCompadre} from './AddToCompadre';
 export {default as ArtPart} from './ArtPart'
 export {default as BoxImage} from './BoxImage'
 export {default as ImageTooltip} from './ImageTooltip';
+export {default as Leaf} from './Leaf';

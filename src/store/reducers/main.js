@@ -68,9 +68,12 @@ const defState = {
   workBranch: null,
   // currentBranch: "0",
   // currentProject: 0,
-  // currentVersion: 0,
+  // currentVersion: 0, // Кибер прах, помянем
   // currentHeight: 0,
   // workProject: 0,
+  mapStore: [],
+  mapGrid: [],  //Мап ресы
+  mapCurrent: '',
   availablePayload: null,
   users: [], // all exist users
   personObj: null, // Всегда можно найти себя по этому адресу..
@@ -86,8 +89,17 @@ export default (state = defState, action) => {
       state.personObj.projectsCoordsData = state.projectsCoordsData;
     }
   }
+  // Псевдо мидл
+  if(type !== 'CHANGE_BRANCH') { // DESTROY DIRTY MAP FIELDS, BECAUSE WE NEED FRESH
+    /// сделать сравние более либеральным может даже функцию с свичем замутить.
+    state.mapStore = [];
+    state.mapGrid = [];
+    state.mapCurrent = [];
+  }
+
   switch(type) {
   
+    // И как интегрировать мидл???
     case 'ADD_PROJECT': //wb.v
     //disavaible middleware модификация pcd..
       return (() => {
@@ -413,6 +425,13 @@ export default (state = defState, action) => {
           state.workBranch.v = 'i'+random;
         return state
       })()
+      case 'SET_MAP_DATA':
+        return (() => {
+          const {mapGrid, mapStore, mapCurrent} = payload;
+          return {
+            ...state, mapGrid, mapStore, mapCurrent
+          };
+        })()
     // case 'OPEN_PROJECT_CREATOR': 
     //   return {
     //     ...state,
@@ -464,6 +483,7 @@ export default (state = defState, action) => {
         comment: payload.comment,
         date,
         superId: newVersionInd,
+        master: null,
         illustrations: state.projects[projectInd].versions[versionInd].illustrations,
         data: dataClone
       });
@@ -500,7 +520,7 @@ export default (state = defState, action) => {
     case 'SAVE_POD': //wb.v
     debugger
     return (() => {
-      
+      // Доделать этот компонент.
       console.log('PAYLOD:', payload);
       const {data: {label, mainPart, comment, artsDesription, branchDirection, answers, artSrc}, selectedType} = payload;
       
@@ -526,8 +546,10 @@ export default (state = defState, action) => {
       const updateAnswers = () => {
         debugger
         answers.forEach(({content, key, ref}) => {
-          console.log(typeof key)
-          realWorkBranch['q'+key] = {
+          console.log(typeof key);
+          realWorkBranch['q'+key] = realWorkBranch.hasOwnProperty('q'+key) 
+          ? {...realWorkBranch['q'+key], ans: content}
+          : {
             ans: content,
             pos: state.workBranch.pos+key,
             branch: {
@@ -631,34 +653,42 @@ export default (state = defState, action) => {
     // payload = 0
     
     return (() => {
-      if(payload === 'back') {
+      let projectInd = [];
+      mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
+
+      let versionInd = [];
+      mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
+      
+      if(payload === 'back') { // возвращение на ласт вопрос
         let path = state.workPCD[state.workPCD.workVersion].path;
         state.workPCD[state.workPCD.workVersion].path = path.substring(0, path.length-1);
         state.workPCD[state.workPCD.workVersion].height = "question";
         
-        let projectInd;
-        for(let i in state.projects) {
-          if(state.workPCD.projectId === state.projects[i].superId) {
-            projectInd = i;
-          }
-        };
-        let versionInd;
-        for(let i in state.projects[projectInd].versions) {
-          if(state.workPCD.workVersion === state.projects[projectInd].versions[i].superId) {
-            versionInd = i;
-          }
-        }
-        state.workBranch = state.projects[projectInd].versions[versionInd].data;
+        
+        state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
         let workPath = state.workPCD[state.workPCD.workVersion].path.substring(1);
-        while(workPath) {
-          state.workBranch = state.workBranch.branch['q'+workPath[0]];
-          workPath = workPath.substring(1);
-        };
+        pathReducer(workPath, state);
+        // while(workPath) {
+        //   state.workBranch = state.workBranch.branch['q'+workPath[0]];
+        //   workPath = workPath.substring(1);
+        // };
         if(state.workBranch.branch.base.length) {
           state.workPCD[state.workPCD.workVersion].height = '0'
         }
 
+      } else if(typeof payload === 'string') { // Event from map
+        debugger
+        state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
+        state.workPCD[state.workPCD.workVersion].path = payload;
+        state.workPCD[state.workPCD.workVersion].height = "question";
+        let path = payload.substring(1);
+        pathReducer(path, state);
+
+        if(state.workBranch.branch.base.length) {
+          state.workPCD[state.workPCD.workVersion].height = '0'
+        }
       } else {
+        debugger
         state.workBranch = state.workBranch.branch['q'+payload];
         state.workPCD[state.workPCD.workVersion].path = state.workPCD[state.workPCD.workVersion].path+payload;
         state.workPCD[state.workPCD.workVersion].height = "question";
@@ -822,8 +852,12 @@ export default (state = defState, action) => {
       }
     })()
     case 'SELECT_VERSION': 
+    debugger
     return (() => {
       console.log('payload');
+      if(!state.workPCD.hasOwnProperty(payload)) { // пришел чел с другого акка, он не был при создании версии..
+        state.workPCD[payload] = {path: '0', height: '0'}
+      } 
       state.workPCD.workVersion = payload;
 
       let projectInd = [];

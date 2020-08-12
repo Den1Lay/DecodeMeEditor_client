@@ -211,7 +211,7 @@ useEffect(() => {
             value={{panes: answers, activeKey}}/>
           {workBranch.branch['q'+activeKey] && saveState && 
           <div className={classNames('editor__left_tabs_cross')}>
-            <Button clickHandler={() => {changeBranch(activeKey)}}>CROSS</Button>
+            <Button clickHandler={() => {changeBranch(+activeKey)}}>CROSS</Button>
           </div>}
         </div>
       </div>

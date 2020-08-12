@@ -23,6 +23,7 @@ export {updateData} from './main'
 export {accessControl} from './main'
 export {changeMaster} from './main'
 export {setIllustrations} from './main';
+export {setMapData} from './main';
 
 export {fetchUserData} from './network'
 export {userLogin} from './network'

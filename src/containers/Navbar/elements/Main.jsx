@@ -143,7 +143,7 @@ debugger //changeMaster(false)
         </Button>
       </div>
       <div className='navbar__mainActions_map'>
-        <Button place='navbar'>
+        <Button place='navbar' clickHandler={() => openPlace('map')}>
           Map
         </Button>
       </div>

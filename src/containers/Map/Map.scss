@@ -1,0 +1,78 @@
+@import '@/styles/variables';
+
+.map {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  &__line {
+    display: flex;
+    margin-bottom: 1vh;
+  }
+  &__top {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    // ::-webkit-scrollbar {
+    //   width: 1.3vh !important;
+    //   height: 1.3vh !important;
+    //   border: 1px solid $grey !important;
+    // }
+    // ::-webkit-scrollbar-thumb {
+    //   background: $grey !important; 
+
+    // }
+    &_space {
+      min-width: 2vw;
+      height: 100%;
+    }
+    &_mainPart {
+      width: 79.4vw;
+      height: 92vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      overflow: scroll;
+      &_wrapper {
+        // width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-end;
+        height: 100%;
+
+        .plug {
+          width: 3000px;
+          height: 4000px;
+          background-color: goldenrod;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        &_row {
+          display: flex;
+        }
+      }
+      &_space {
+        height: 10vh;
+        width: 100%;
+        &_row {
+          width: 5vw;
+          height: 100%;
+        }
+      }
+
+      // .wrapper {
+      //   border-bottom: 1px solid $grey;
+      //   border-left: 1px solid $grey;
+      // }
+    }
+  }
+  &__bottom {
+    display: flex;
+    width: 100%;
+    height: 2.5vh;
+  }
+}

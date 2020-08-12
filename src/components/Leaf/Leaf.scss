@@ -1,0 +1,62 @@
+@import '@/styles/variables';
+
+.leaf {
+  width: 4vw;
+  height: 2.5vh; // + 1 vh
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  //align-items: center;
+  //border: 1px solid $grey;
+  &__main {
+    cursor: pointer;
+    width: 70%;
+    z-index:2;
+    border-radius: 10%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    //border: 2px solid $green;
+    &_connect {
+      position: absolute;
+      width: 2px;
+      background-color: $dark;
+      right: 0;
+      //bottom: 1.25vh;
+    }
+    background-color: $green;
+    &-current {
+      background-color: $darkGreen;
+    }
+    &_pods {
+      color: white
+    }
+  }
+
+  &__tail {
+    width: 30%;
+    height: 2px;
+    background-color: $dark;
+    position: absolute;
+    top: 1.25vh;
+    left: 0;
+  }
+  &__boll {
+    position: absolute;
+    z-index: 4;
+    //top: 1.25vh;
+    width: 1.5vh;
+    height: 1.5vh;
+    border-radius: 50%;
+    background-color: $dark;
+    &-right {
+      right: -0.75vh;
+    }
+    &-left {
+      left: -0.75vh;
+    }
+  }
+  //border-right: 1px solid $grey;
+  //border-top: 1px solid $grey;
+}

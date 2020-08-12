@@ -58,6 +58,10 @@ export const setIllustrations = payload => ({
   type: 'SET_ILLUSTRATIONS',
   payload
 })
+export const setMapData = payload => ({
+  type: 'SET_MAP_DATA',
+  payload
+})
 // export const openProjectSetup = () => ({
 //   type: 'OPEN_PROJECT_SETUP'
 // })
