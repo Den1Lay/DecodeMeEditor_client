@@ -17,6 +17,7 @@ import './Main.scss';
 const Main = ({mainPlace, openPlace}) => {
   // интегрируй роутер
   const [component, setComponent] = useState([{name: null, payload: <div></div>}]);
+  debugger
   useEffect(() => {
     if(component[0].name !== mainPlace) {
       let newPayload;
@@ -67,6 +68,13 @@ const Main = ({mainPlace, openPlace}) => {
           newPayload = (
             <div className='choose'>
               Choose project
+            </div>
+          )
+        break
+        case 'error':
+          newPayload = (
+            <div className='error'>
+              Project, version or pod was deleted, rechoose project.
             </div>
           )
         break

@@ -6,6 +6,7 @@ import {
   addFriend, 
   accessControl, 
   updateData, 
+  deleteData,
   setIllustrations,
   setMaster} from '@/actions'
 
@@ -101,6 +102,14 @@ socket
       });
       openNotification({type: 'info', message: 'Right request', description: `By ${nickName}` })
     })()
+  })
+  .on('NEW_FRIEND_PROJECT', ({project, sender}) => {
+    const {main: {personObj: {userData: {superId}}}} = store.getState();
+    superId !== sender 
+  })
+  .on('DELETE', ({person, workPCD, target, sender}) => {
+    store.dispatch(updateData({data: {person, workPCD, target}, address: 'delete'}));
+
   })
 let lastV = null;
 

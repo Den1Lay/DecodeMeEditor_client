@@ -62,6 +62,10 @@ export const setMapData = payload => ({
   type: 'SET_MAP_DATA',
   payload
 })
+export const deleteData = payload => ({
+  type: 'DELETE',
+  payload
+})
 // export const openProjectSetup = () => ({
 //   type: 'OPEN_PROJECT_SETUP'
 // })
@@ -86,6 +90,10 @@ export const changeMaster = payload => ({
   type: 'CHANGE_MASTER',
   payload
 })
+export const saveVersion = payload => ({
+  type: 'SAVE_VERSION',
+  payload
+})
 
 export const loginIn = () => ({
   type: 'LOGIN_IN'
@@ -94,8 +102,9 @@ export const choosePerson = payload => ({
   type: 'CHOOSE_PERSON',
   payload
 })
-export const chooseMe = () => ({
-  type: 'CHOOSE_ME'
+export const chooseMe = payload => ({
+  type: 'CHOOSE_ME',
+  payload
 })
 export const accessControl = payload => ({
   type: 'ACCESS_CONTROL',

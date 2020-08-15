@@ -10,6 +10,15 @@
 // Не подгорай :)
 
 // Логика сеттеров начала прижимать фундаментальную диспатчевую логику. О БАЛ ДЕТЬ. смотри на работу илююстраций
+
+// Эффектная логика (обновление PCD( внутри person также), проектов, новые версии, проекты
+// setup(access), а также состояние мастера) просходит за счет накидывания приставок к workVersion.v
+// Новые версии отлавливаются и фильтруются, с последующими вызовами сокет эвентов.
+// Они же отлавливаются уже на сервере и там проиходит обновленние данных юзера уже в users.json. Много эвентов
+// производят обратный вызов, которые отлавливаются всеми кто в комнате. (нами тоже(филтрятся через sender))
+// 
+
+///!!! Гость может снести branch на котором я стою, что тогда будет?
 import {format, startOfWeek} from 'date-fns';
 import {v4} from 'uuid'
 import FastClone from 'fastest-clone'
@@ -37,8 +46,10 @@ const projects = [{
   date: format(new Date(), "yyyy-MM-dd"),
   superId: 'uuid12',
   master: 'NickName',
+  ways: [{wayId: 'uuv4maybe', wayDirection: 'Way to the other side of the river', color: 'black'}],
   data: {
     pos: "0",
+    wayId: 'uuv4maybe',
     branch: {
     branchDirection: '',
     base: [{
@@ -91,10 +102,36 @@ export default (state = defState, action) => {
   }
   // Псевдо мидл
   if(type !== 'CHANGE_BRANCH') { // DESTROY DIRTY MAP FIELDS, BECAUSE WE NEED FRESH
-    /// сделать сравние более либеральным может даже функцию с свичем замутить.
+    /// сделать сравние более лояльным может даже функцию с свичем замутить.
     state.mapStore = [];
     state.mapGrid = [];
     state.mapCurrent = [];
+  }
+
+  function returnError () {
+    state.workPCD = null;
+    state.workBranch.branch = {}
+    state.mainPlace = 'error'
+  }
+
+  function checkBottomData (successMove) {
+    if(state.workPCD[state.workPCD.workVersion].height === 'question') {
+      // Check exist question
+      if(state.workBranch.branch.question) {
+        successMove()
+        //state.mainPlace = 'editor'
+      } else {
+        returnError();
+      } 
+    } else {
+      // Check exist pod...
+      if(state.workBranch.branch.base?.[state.workPCD[state.workPCD.workVersion].height] ?? false) {
+        successMove()
+        //state.mainPlace = 'editor'
+      } else {
+        returnError();
+      }
+    }
   }
 
   switch(type) {
@@ -102,8 +139,10 @@ export default (state = defState, action) => {
     // И как интегрировать мидл???
     case 'ADD_PROJECT': //wb.v
     //disavaible middleware модификация pcd..
+
       return (() => {
         debugger
+        const wayId = v4();
         const {name, description, access, superAccess} = payload
         state.projects.unshift({
           name,  
@@ -117,8 +156,10 @@ export default (state = defState, action) => {
           superId: v4(),
           master: null,
           illustrations: [],
+          ways: [{wayId, color: 'green', wayDirection: ''}],
           data: {
             pos: "0",
+            wayId,
             branch: {
             branchDirection: '',
             base: [{
@@ -240,6 +281,7 @@ export default (state = defState, action) => {
       return (() => { 
         let {data, address, dls} = payload;
         let connected = state.workPerson === data.person 
+        // рефакторни это место. поиски можно вынести наверх
         switch(address) {
           case 'friend': //  отрабатывает при пике юзера в социальном компоненте 
             (() => {
@@ -256,6 +298,9 @@ export default (state = defState, action) => {
           break;
           case 'versions':
             connected && (() => {
+
+              // нужно чекать есть что рендерить, или нужно дропать ошибку тут.
+
               let {person, projectId, versionId, workVersion} = data
               // Если ты находишь в другом проекте или версии...
               // update version;
@@ -275,6 +320,16 @@ export default (state = defState, action) => {
 
               let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
               pathReducer(path, state);
+
+              // Проверка на то, что в новой дате, есть данные, с координатами, работающего PCD 
+              // Если нет, то выбрасывается ошибка, хотя можно сделать куда мягче, но это уже на rebuild 
+
+              if(state.workBranch !== 'None') {
+                checkBottomData(() => {})
+              } else {
+                returnError()
+              }
+
               state.workBranch.v = random;
             })()
           break;
@@ -315,10 +370,47 @@ export default (state = defState, action) => {
             console.log('%c%s', 'color: pink; font-size: 24px;', 'UPDATED_ILLUS:', state.projects[projectInd[0]].versions[versionInd[0]].illustrations)
           })()
           break;
+          case 'delete': 
+          connected && (() => {
+            
+            const {workPCD, target} = data;
+            let projectInd = [];
+            mineInd(state.projects, workPCD.projectId, 'superId', projectInd);
+
+            let PCDInd = [];
+            mineInd(state.projectsCoordsData, workPCD.projectId, 'projectId', PCDInd);
+            if(target === 'project') {
+              state.projects.splice(projectInd[0], 1);
+              state.projectsCoordsData.splice(PCDInd[0], 1);
+
+            } else {
+
+              // в будущем отловить исключение и сделать подхват существующих версий. 
+              // А если удаляется последняяя версия, то удаляется проект. Это чекается в рекдакторе версии
+              // проще всего полностью снести PCD. потом просто репикнуть. С мапой это на изи делается.
+              
+              let versionInd = [];
+              mineInd(state.projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
+              state.projects[projectInd[0]].versions.splice(versionInd[0], 1);
+              state.projectsCoordsData.splice(PCDInd[0], 1);
+              // прочекать подъем проекта и версий в PCD.
+            }
+
+            // перебрасывать и удаялять PCD если рабочий проект тот же
+            // иначе все остается на месте, просто появится пушка об удалении
+
+            if(state.workPCD.projectId === data.workPCD.projectId) {
+              state.workBranch.branch = {};
+              state.workPCD = null;
+              state.mainPlace = 'error';
+            }
+            
+          })()
+          break
           default:
         }
         return state;
-      })()
+      })();
     case 'ACCESS_CONTROL': 
       //{event, pass} = payload
       //{projectId, superId} = pass 
@@ -387,7 +479,8 @@ export default (state = defState, action) => {
       })();
     case 'CHANGE_MASTER':
       debugger
-      return (() => {
+      return state.workPCD
+      ? (() => {
         let projectInd = [];
           mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd);
           let versionInd = [];
@@ -404,6 +497,7 @@ export default (state = defState, action) => {
         state.workBranch.v = 'a'+random;
         return state
       })()
+      : state
 
     case 'SET_ILLUSTRATIONS':  // этот элемент вызывается юзером на прямую.
       return (() => {
@@ -478,13 +572,16 @@ export default (state = defState, action) => {
       let DataFactory = FastClone.factory(dataExample);
       let dataClone = new DataFactory(dataExample);
       // debugger
+      const {ways, illustrations} = state.projects[projectInd].versions[versionInd];
+
       let newVersionInd = v4();
       state.projects[projectInd].versions.push({
         comment: payload.comment,
         date,
         superId: newVersionInd,
         master: null,
-        illustrations: state.projects[projectInd].versions[versionInd].illustrations,
+        ways,
+        illustrations,
         data: dataClone
       });
 
@@ -521,8 +618,9 @@ export default (state = defState, action) => {
     debugger
     return (() => {
       // Доделать этот компонент.
+      // Интегрировать новую дату: PathDirection на уровне версии, потом пройтись по всему и прокомментить
       console.log('PAYLOD:', payload);
-      const {data: {label, mainPart, comment, artsDesription, branchDirection, answers, artSrc}, selectedType} = payload;
+      const {data: {label, mainPart, comment, artsDesription, branchDirection, wayDirection, answers, artSrc}, selectedType} = payload;
       
       let realWorkBranch = state.workBranch.branch;
       let currentHeight = state.workPCD[state.workPCD.workVersion].height;
@@ -543,15 +641,34 @@ export default (state = defState, action) => {
         }
       };
 
+      // здесь происходит модифицирование описания рабочего вея не зависимо вопрос это или под
+
+      // let etalonWay = state.workBranch.wayId;
+      // let projectInd = [];
+      // mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
+
+      // let versionInd = [];
+      // mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
+
+      // let etalonWayInd = [];
+      // mineInd(state.projects[projectInd[0]].versions[versionInd[0]].ways, etalonWay, 'wayId', etalonWayInd);
+
+      // state.projects[projectInd[0]].versions[versionInd[0]].ways[etalonWayInd[0]].wayDirection = wayDirection;
+
       const updateAnswers = () => {
         debugger
-        answers.forEach(({content, key, ref}) => {
+        answers.forEach(({content, key, ref}) => { // wayColor, wayId
           console.log(typeof key);
-          realWorkBranch['q'+key] = realWorkBranch.hasOwnProperty('q'+key) 
-          ? {...realWorkBranch['q'+key], ans: content}
-          : {
+
+          //!!! пройдись с дебаггером. Но все должно быть хорошо. Нельзя просто так переставлять элементы.
+          // -> последовательность сохранится
+
+          const isNewBranch = !realWorkBranch.hasOwnProperty('q'+key);
+          realWorkBranch['q'+key] = isNewBranch
+          ? {
             ans: content,
             pos: state.workBranch.pos+key,
+            //wayId,
             branch: {
               branchDirection: '',
               base: [
@@ -573,8 +690,26 @@ export default (state = defState, action) => {
               choseCount: 0,
               ref: ref.length === 0 ? false : ref,
               }
-          }
+            }
+          : {...realWorkBranch['q'+key], ans: content} // wayId
+          // if(isNewBranch) {
+          //   state.projects[projectInd[0]].versions[versionInd[0]].ways.push({wayId, color: wayColor, wayDirection: ''})
+          // } else {   
+          //   // find and modif   
+          //   let wayInd = [];
+          //   mineInd(state.projects[projectInd[0]].versions[versionInd[0]].ways, wayId, 'wayId', wayInd);
+          //   if(etalonWay === state.projects[projectInd[0]].versions[versionInd[0]].ways[wayInd[0]].wayId) {
+          //     state.projects[projectInd[0]].versions[versionInd[0]].ways[wayInd[0]] = {wayId, color: wayColor, wayDirection}
+          //   } else {
+          //     state.projects[projectInd[0]].versions[versionInd[0]].ways[wayInd[0]] = {
+          //       ...state.projects[projectInd[0]].versions[versionInd[0]].ways[wayInd[0]], color: wayColor
+          //     }
+          //   }
+          // };
         });
+
+
+
         realWorkBranch.choseCount = answers.length;
         realWorkBranch.question = {
           coord: {
@@ -642,6 +777,8 @@ export default (state = defState, action) => {
         //создать ПОД по максимальной высоте и ликвидировать вопрос с ответами.
       }
       state.workBranch.branch.branchDirection = branchDirection;
+      
+      // где то здесь получается...
       state.workBranch.v = 'p'+random; // события по обработчику
       return {
         ...state
@@ -790,11 +927,20 @@ export default (state = defState, action) => {
       }
     })()
     case 'SELECT_PROJECT': 
-    console.log(payload)
+    console.log(payload) // projectId
     return (() => {
+
+      // этот блок отвечает за то, что бы сейвить myLastProject, которые используется для возвращения домой
+      // и как альтернатива работе дом, так же сейвиться последний проект у друга... для восстановления 
+      // ласт состояния у друга, после всех проверок..
+
       let isFriend = state.personObj.userData.friends.some(({superId}) => superId === state.workPerson);
-      if(state.personObj.userData.superId !== state.workPerson) {
+      if(state.personObj.userData.superId !== state.workPerson) { 
+
         //обновление координат данных о последних проектах
+        // компонент сделан так убого, потому что я пытался добывать данные у случайных челов,
+        // что привело бы к бессконечноному нарастанию исключений, вокруг того пика.
+
         if(isFriend) { 
           let workFriendInd;
           for(let i in state.personObj.userData.friends) {
@@ -808,43 +954,49 @@ export default (state = defState, action) => {
         state.personObj.userData.myLastProject = payload;
       };
 
-      let PCDInd;
-      state.projectsCoordsData.forEach(({projectId}, i) => {
-        if(payload === projectId) {
-          PCDInd = i;
-        }
-      });
+      let PCDInd = [];
+      mineInd(state.projectsCoordsData, payload, 'projectId', PCDInd);
 
-      let projectInd;
-      state.projects.forEach(({superId}, i) => {
-        if(payload === superId) {
-          projectInd = i;
-        }
-      });
+      // .forEach(({projectId}, i) => {
+      //   if(payload === projectId) {
+      //     PCDInd = i;
+      //   }
+      // });
+
+      let projectInd = [];  // двухсторонная связь, данные 100% существуют.
+      mineInd(state.projects, payload, 'superId', projectInd)
+      // .forEach(({superId}, i) => {
+      //   if(payload === superId) {
+      //     projectInd = i;
+      //   }
+      // });
       
-      // Хендлинг остутсвия проекта в PCD юзера и компенсация пропуска
-      if(PCDInd === undefined) { // работает при пике проекта у друга
+      // Хендлинг остутсвия проекта в PCD юзера и компенсация пропуска.
+      // Работает как у гостя, так и у юзера.
+
+      if(!PCDInd.length) { // работает при пике проекта у друга и себя, если был делет
         // add new project in PCD;
-        let firstVersionId = state.projects[projectInd].versions[0].superId;
-        let workHeight = state.projects[projectInd].versions[0].data.branch.base.length ? "0" : "question";
+        let firstVersionId = state.projects[projectInd[0]].versions[0].superId;
+        let workHeight = state.projects[projectInd[0]].versions[0].data.branch.base.length ? "0" : "question";
         state.projectsCoordsData.push({projectId: payload, workVersion: firstVersionId, [firstVersionId]: {path: "0", height: workHeight}})
         PCDInd = state.projectsCoordsData.length-1;
       }
 
       state.workPCD = state.projectsCoordsData[PCDInd]; 
-      let versionInd;
-      for(let i in state.projects[projectInd].versions) { //lastProject
-        if(state.projects[projectInd].versions[i].superId === state.workPCD.workVersion) {
-          versionInd = i;
-        }
-      };
-      state.workBranch = state.projects[projectInd].versions[versionInd].data;
+      let versionInd = [];
+      mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd);
+      // for(let i in ) { //lastProject
+      //   if(state.projects[projectInd].versions[i].superId === ) {
+      //     versionInd = i;
+      //   }
+      // };
+      state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
   
-      let workPath = state.workPCD[state.workPCD.workVersion].path.substring(1);
-      while (workPath.length) {
-        state.workBranch = state.workBranch.branch['q'+workPath[0]];
-        workPath = workPath.substring(1);
-      };
+      // let workPath = state.workPCD[state.workPCD.workVersion].path.substring(1);
+      // while (workPath.length) {
+      //   state.workBranch = state.workBranch.branch['q'+workPath[0]];
+      //   workPath = workPath.substring(1);
+      // };
       state.workBranch.v = 'c'+random;
       state.mainPlace = 'editor';
       return {
@@ -854,48 +1006,49 @@ export default (state = defState, action) => {
     case 'SELECT_VERSION': 
     debugger
     return (() => {
-      console.log('payload');
-      if(!state.workPCD.hasOwnProperty(payload)) { // пришел чел с другого акка, он не был при создании версии..
-        state.workPCD[payload] = {path: '0', height: '0'}
-      } 
-      state.workPCD.workVersion = payload;
-
+      //payload  -> pcd.workVersion
       let projectInd = [];
       mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd);
 
       let versionInd = [];
       mineInd(state.projects[projectInd[0]].versions, payload, 'superId', versionInd);
+
+      if(!state.workPCD.hasOwnProperty(payload)) { 
+        // пришел чел с другого акка, он не был при создании версии.. или user после delete
+        const height = state.projects[projectInd[0]].versions[versionInd[0]].data.branch.base.length ? '0' : 'question';
+        state.workPCD[payload] = {path: '0', height}
+      } 
+      state.workPCD.workVersion = payload;
       
       state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
-      let path = state.workPCD[payload].path.substring(1);
-      pathReducer(path, state)
-      state.workBranch.v = 'c'+random
-      return state
-    })();
-    case 'PREVIEW_PERSON': 
-    return (() => {
-      // ОЧЕНЬ ПЛОХАЯ ИДЕЯ... ОЧЕНЬ.. без... И все таки это улетает на ребилд после альфы.
-      // 
-      console.log("PREVIEW_PERSON: ", payload) 
-         // payload = {userData, projects, }
-      const {projects, userData} = payload;
-      state.projects = projects;
-      state.workPerson = userData.superId;
-      state.workBranch = projects[0].versions[0].data;
 
-      //let versionId = projects[0].versions[0].superId;
-      // projects.reverse().forEach(({superId, versions: {superId: versionId}}) => {
-      //   state.projectsCoordsData.push({projectId: superId, workVersion, }) // это должно быть частью SELECT PROJECT
-      // }) // дополнение PCD при отсутстивии пакета с Id выбранного проекта
-      // state.workPCD = {
-      //   projectId: projects[0].superId, 
-      //   workVersion: versionId,
-      //   [versionId]: {path: "0", height: "0"}
-      // };
-      //state.projectsCoordsData.push(state.workPCD);
+      state.workBranch.v = 'c'+random
+      return state;
+    })();
+    // case 'PREVIEW_PERSON': 
+    // return (() => {
+    //   // ОЧЕНЬ ПЛОХАЯ ИДЕЯ... ОЧЕНЬ.. без... И все таки это улетает на ребилд после альфы.
+    //   // 
+    //   console.log("PREVIEW_PERSON: ", payload) 
+    //      // payload = {userData, projects, }
+    //   const {projects, userData} = payload;
+    //   state.projects = projects;
+    //   state.workPerson = userData.superId;
+    //   state.workBranch = projects[0].versions[0].data;
+
+    //   //let versionId = projects[0].versions[0].superId;
+    //   // projects.reverse().forEach(({superId, versions: {superId: versionId}}) => {
+    //   //   state.projectsCoordsData.push({projectId: superId, workVersion, }) // это должно быть частью SELECT PROJECT
+    //   // }) // дополнение PCD при отсутстивии пакета с Id выбранного проекта
+    //   // state.workPCD = {
+    //   //   projectId: projects[0].superId, 
+    //   //   workVersion: versionId,
+    //   //   [versionId]: {path: "0", height: "0"}
+    //   // };
+    //   //state.projectsCoordsData.push(state.workPCD);
    
-      return state
-    })()
+    //   return state
+    // })()
     case 'ADD_FRIEND': 
       //payload === user 
       debugger
@@ -911,26 +1064,54 @@ export default (state = defState, action) => {
         // вызов с вынужденной датой через перепресваивание рабочего проекта
         // грядет эпоха геттеров 
         state.workBranch = {};
-        state.projects = state.personObj.projects;
+        state.projects = payload;
         state.workPerson = state.personObj.userData.superId;
 
         if(state.personObj.userData.myLastProject !== null) {
           const lastProject = state.personObj.userData.myLastProject;
-          
+
           let projectsCoordInd = [];
           mineInd(state.projectsCoordsData, lastProject, 'projectId', projectsCoordInd)
-   
-          state.workPCD = state.projectsCoordsData[projectsCoordInd[0]];
-          let projectInd = []
-          mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
 
-          let versionInd = [];
-          mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
-    
-          state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
-          let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
-          pathReducer(path, state);
-          state.mainPlace = 'editor';
+          if(projectsCoordInd.length) { 
+            // PCD существует, значит проверка. ПРОСТО 2 ПРОВЕРКИ потом сделаю исключения более лаконичными.
+
+            state.workPCD = state.projectsCoordsData[projectsCoordInd[0]];
+            let projectInd = []
+            mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
+
+            if(projectInd.length) {
+              let versionInd = [];
+              mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
+        
+              if(versionInd.length) {
+                state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
+                let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+                pathReducer(path, state);
+
+                if(state.workBranch !== 'None') {
+
+                  // CHECK POD || QUERY проверка комплексная.. 
+                  ///// надо вынести это в отдельную функцию....
+                  checkBottomData(() => state.mainPlace = 'editor');
+                  /////
+                  
+                } else {
+                  returnError()
+                }
+
+              } else { 
+                returnError()
+              }
+
+            } else {
+              returnError()
+            }
+
+          } else {
+            returnError()
+          }
+          
         } else {
           state.workPCD = null
           state.workBranch.branch = {};
@@ -955,24 +1136,51 @@ export default (state = defState, action) => {
         mineInd(state.personObj.userData.friends, payload, 'superId', deepFriendInd);
         // friends last project....
         let lastMyProjectInFriend = state.personObj.userData.friends[deepFriendInd[0]].lastProject;
+
         if(lastMyProjectInFriend !== null) {
-          // чекнуть исключения на удаленный проект
+          // поиск рабочего PCD, который отвечает за последний последний проект, версию, высотку пода.
           let PCDInd = [];
           mineInd(state.projectsCoordsData, lastMyProjectInFriend, 'projectId', PCDInd);
+          
+          if(PCDInd.length) {
 
-          state.workPCD = state.projectsCoordsData[PCDInd[0]];
+            state.workPCD = state.projectsCoordsData[PCDInd[0]];
+            let projectInd = [];
+            mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
+            
+            if(projectInd.length) {
 
-          let projectInd = [];
-          mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
+              console.time()
+              let versionInd = [];
+              mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
+              
+              if(versionInd.length) {
 
-          console.time()
-          let versionInd = [];
-          mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
-          console.timeEnd()
-          state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
-          let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
-          pathReducer(path, state)
-          state.mainPlace = 'editor'
+                console.timeEnd()
+                state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
+                let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+                pathReducer(path, state)
+
+                if(state.workBranch !== 'None') {
+
+                  // CHECK POD || QUERY проверка комплексная.. 
+                  checkBottomData(() => state.mainPlace = 'editor');
+                } else {
+                  returnError()
+                }
+
+              } else {
+                returnError()
+              }
+              
+            } else {
+              returnError()
+            }
+            
+          } else {
+            returnError()
+          }
+          
         } else {
           state.workPCD = null;
           state.workBranch.branch = {};
@@ -987,9 +1195,11 @@ export default (state = defState, action) => {
     case 'INIT':
       debugger
       return (() => {
-        // РЕВОРК ! (пробелема с пустыми данными...)
+        // Прокоментить каждое действие и интегрировать mineInd
+
+        // РЕВОРК ! (пробелема с пустыми данными...) 
         // РЕФАКТОРИИИНГ  !!!!! !! ! (хотя бы до первого деплоя)
-        console.log('%c%s', 'color: pink; font-size: 22px', "DEBUG:", payload)
+        console.log('%c%s', 'color: pink; font-size: 22px', "DEBUG:", payload);
         const {friends, personObj: {projects, projectsCoordsData, lastProject, lastPerson, userData: {superId}}} = payload;
         state.personObj = payload.personObj
         //state.projects = projects;
@@ -998,56 +1208,63 @@ export default (state = defState, action) => {
         // Всегда можно найти себя по этому адресу..
         //state.currentProject = lastProject;
         state.workBranch = {};
-      
-        let projectsCoordInd = null;
-          for(let x=0;x<projectsCoordsData.length;x++) {
-            if(projectsCoordsData[x].projectId === lastProject) {
-              projectsCoordInd = x;
-            }
-          }
+        
+        let projectsCoordInd = [];
+        mineInd(projectsCoordsData, lastProject, 'projectId', projectsCoordInd) 
+        // по налу он не найдет ничего))
 
-        if(lastPerson === superId) {
+        if(lastPerson === superId) { // спавнимся дома
+          /// 
+          state.workPerson = superId;
+          state.projects = state.personObj.projects;
           ///
-          state.projects = state.personObj.projects
-          ///
-          let lockInd = null;
-          for(let i=0;i<projects.length;i++) {
-            if(projects[i].superId === lastProject) {
-              lockInd = i;
-            }
-          }
-          if(projectsCoordInd !== null) {
-            // Уже есть проект 
-            let pcd = projectsCoordsData[projectsCoordInd];
-            let version = pcd.workVersion;
-            let {path, height} = pcd[version];
+          if(projectsCoordInd.length) { 
+            state.workPCD = state.projectsCoordsData[projectsCoordInd[0]];
+            let lockInd = [];
+            mineInd(projects, lastProject, 'superId', lockInd);
 
-            let versionInd;
-            for(let i in state.projects[lockInd].versions) {
-              if(version === state.projects[lockInd].versions[i].superId) {
-                versionInd = i;
+            if(lockInd.length) {
+
+              
+              let versionInd = [];
+              mineInd(state.projects[lockInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
+
+              if(versionInd.length) {
+
+                state.workBranch = state.projects[lockInd[0]].versions[versionInd[0]].data;
+                let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+                pathReducer(path, state)
+              
+                if(state.workBranch !== 'None') { 
+                  checkBottomData(() => state.mainPlace = 'editor')
+                } else {
+                  returnError()
+                }
+
+              } else {
+                returnError()
               }
+
+              // if(projectsCoordInd[0] !== null) { /// Нужно еще branch и path чекать.... Ебаа
+              //   // Уже есть проект 
+                
+      
+              // } else { /// PCD CHECK NAT
+              //   // еще нет проектов 
+              //   state.workPCD = null
+              //   state.workBranch.branch = {};
+              //   state.mainPlace = 'beginner'
+              // }
+              
+            } else {
+              returnError(); 
             }
 
-            state.workBranch = state.projects[lockInd].versions[versionInd].data;
-
-            path = path.substring(1);
-            while(path.length) {
-              state.workBranch = state.workBranch.branch['q'+path[0]];
-              path = path.substring(1);
-            }
-            state.workPCD = state.projectsCoordsData[projectsCoordInd];
-            //state.workVersion = workVersion;
-            state.workPerson = superId;
-            //state.currentHeight = height;
           } else {
-            // еще нет проектов 
-            state.workPCD = null
-            state.workBranch.branch = {};
-            state.workPerson = superId;
-            state.mainPlace = 'beginner'
+            returnError() // PROJECT CHECK
           }
-        } else {
+          
+        } else { // спавнимся в гостях
           debugger
           // обработать ошибку с отключенным аксессом и в следствии этого упавшим проектом
 
@@ -1060,56 +1277,59 @@ export default (state = defState, action) => {
           // все норм, только нужно хендлить пустые проекты 
           state.workPerson = lastPerson; // прокинут ийди человечка
 
-          let friendInd = null;
-          friends.forEach(({userData: {superId}}, i) => {
-            if(lastPerson === superId) {
-              friendInd = i;
-            }
-          })
-          state.projects = state.friends[friendInd].projects; /// прокинуты проекты
+          let friendInd = [];
+          mineInd(friends, lastPerson, ['userData', 'superId'], friendInd)
 
-          if(lastProject !== null) { // ЕСть с чем работать.
-            let projectInd;
-            state.projects.forEach(({superId}, i) => {
-              if(lastProject === superId) {
-                projectInd = i;
+          // профиля пока что не удаляются поэтому сейв не нужен
+
+          // friends.forEach(({userData: {superId}}, i) => {
+          //   if(lastPerson === superId) {
+          //     friendInd = i;
+          //   }
+          // })
+          state.projects = state.friends[friendInd[0]].projects; /// прокинуты проекты
+
+
+
+          if(projectsCoordInd.length) {
+            state.workPCD = state.projectsCoordsData[projectsCoordInd[0]]; 
+
+            if(lastProject !== null) { // ЕСть с чем работать. юзлесный чек, но историчный, так что сейвлю
+              let projectInd = [];
+              mineInd(state.projects, lastProject, 'superId', projectInd);
+
+              if(projectInd.length) {
+                
+                let versionInd = [];
+                mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
+                
+                if(versionInd.length) {
+                  state.workBranch = state.projects[projectInd[0]].versions[versionInd].data  // прокинут ворк бренч.
+                  let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+                  pathReducer(path, state)
+                  if(state.workBranch !== 'None') {
+                    checkBottomData(() => state.mainPlace = 'editor')
+                  } else {
+                    returnError()
+                  }
+                } else {
+                  returnError()
+                }
+              
+              } else {
+                returnError()
               }
-            })
-            
-            // let PCDInd;
-            // state.projectsCoordData.forEach(({projectId}, i) => {
-            //   if(lastProject === projectId) {
-            //     PCDInd = i;
-            //   }
-            // });
-
-            state.workPCD = state.projectsCoordsData[projectsCoordInd]; // прокинуты workPCD
-
-            let versionInd;
-            state.projects[projectInd].versions.forEach(({superId}, i) => {
-              if(superId === state.workPCD.workVersion) {
-                versionInd = i;
-              }
-            })
-            
-            state.workBranch = state.projects[projectInd].versions[versionInd].data  // прокинут ворк бренч.
-            let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
-
-            while(path.length) {
-              state.workBranch = state.workBranch.branch['q'+path[0]];
-              path = path.substring(1);
+  
+            } else { // юзлес вроде. УДали.
+              state.workPCD = null;
+              state.workBranch.branch = {};
+              state.mainPlace = 'choose'
             }
+
           } else {
-            state.workPCD = null;
-            state.workBranch.branch = {};
-            state.mainPlace = 'choose'
+            returnError()
           }
 
-          
-          
-          // for(let k=0;k<friends.length;k++) {
-          //   if(friends[k])
-          // }
         }
         state.workBranch.v = Math.random();
         return {
@@ -1136,10 +1356,11 @@ export default (state = defState, action) => {
   //     }
   //   }
   // };
-  function pathReducer(path, state) {
+  function pathReducer(path, state) { /// переместить это чудо функцию наверх
     while(path.length) {
-      state.workBranch = state.workBranch.branch['q'+path[0]];
+      state.workBranch = state.workBranch?.branch?.['q'+(path?.[0] ?? 'none')] ?? "None";
       path = path.substring(1);
     };
   };
 }
+

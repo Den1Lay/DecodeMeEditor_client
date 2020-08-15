@@ -40,7 +40,10 @@ const Social = (
     }
     if(person && !isFriend && (!personDetail || (personDetail.userData.superId !== person.superId))) {
       socket.emit('GET_USERS_DETAIL', {token: localStorage.token, personId: person.superId});
-      socket.on('NEW_USERS_DETAIL', ({user}) => setPersonDetail(user))
+      socket.on('NEW_USERS_DETAIL', ({user}) => {
+        console.log("MAIN_SOCIAL_EVENT")
+        setPersonDetail(user)
+      })
     } else if(person && (!personDetail || (personDetail.userData.superId !== person.superId))) {
       //is Friend
       let friendInd;

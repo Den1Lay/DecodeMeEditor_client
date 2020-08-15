@@ -21,7 +21,6 @@ const ArtPart = (
     fileHandler, 
     artSrc, 
     illustrations, 
-    setArtSrc, 
     unsetIllust, 
     setIllust, 
     removeIllust
@@ -69,10 +68,10 @@ const ArtPart = (
   // });
 
 
-  function chooseFromExist() {
-    console.log('CHOOSE_FROM_EXIST');
-    setArtSrc(illustrations[0]) // сделать здесь полноценные редактор пикч.
-  } 
+  // function chooseFromExist() {
+  //   console.log('CHOOSE_FROM_EXIST');
+  //   setArtSrc(illustrations[0]) // сделать здесь полноценные редактор пикч.
+  // } 
 
   return (
     <div className='artPart'>

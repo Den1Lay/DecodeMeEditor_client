@@ -142,6 +142,54 @@
           line-height: 3vh;
         }
       }
+      &_delete {
+        display: flex;
+        justify-content: flex-end;
+        &_space {
+          flex: 12;
+        }
+        &_btn {
+          margin: 1.3vh 1.3vh 0 0;
+          flex: 2;
+        }
+      }
+    }
+    .handler {
+      margin-top: 3vh 0 2vh 0;
+      font-size: 33px;
+      color: $grey;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    &__versionPart {
+
+      display: flex;
+      flex-direction: column;
+      &_top {
+        display: flex;
+        margin: 1.3vh;
+        &_comment {
+          flex: 5
+        }
+        &_space {
+          flex: 7
+        }
+        &_save {
+          flex: 2.5
+        }
+      }
+      &_bottom {
+        margin: 0 1.3vh;
+        display: flex;
+        &_space {
+          flex: 10
+        }
+        &_deleteBtn {
+          flex: 2.5;
+        }
+      }
     }
   }
   .version {

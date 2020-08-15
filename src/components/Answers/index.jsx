@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import {connect} from 'react-redux';
+import {v4} from 'uuid'
 
 import { Tabs } from 'antd';
 import {Mentions, Input, Button} from '@/components'
@@ -154,9 +155,9 @@ const Answers = ({value, setAnswers, setActiveKey}) => {
     add: function () {
       debugger
       let panes = value.panes
-      let newPanes = [...panes].concat({content: "", ref: ""});
+      let newPanes = [...panes].concat({content: "", ref: "", wayId: v4(), wayColor: 'pink'});
       newPanes = this.addProps(newPanes);
-      setAnswers({panes: newPanes, activeKey: newPanes.length-1+''})
+      setAnswers({panes: newPanes, activeKey: newPanes.length-1+'', })
     }
   }
 

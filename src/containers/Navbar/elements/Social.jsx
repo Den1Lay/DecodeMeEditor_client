@@ -1,15 +1,31 @@
+// Компонент отвечает за возвращение домой, причем, с поднятием новых данных о проектах,
+// Если кто-то что-то поменял пока владельца не было дома.
+
+// Так же здесь будут кнопки для быстрого доступа к проектам друзей
+
 import React from 'react'
 import {connect} from 'react-redux'
+import {socket} from '@/core'
 
 import {Button} from '@/components'
 
 import {openPlace, chooseMe} from '@/actions'
 
 const Navbar_Social = ({personObj, openPlace, chooseMe}) => {
-  // function socialClickHandl(ev) {
-  //   ev.persist();
-  //   console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
-  // }
+
+
+  function chooseMeHanler() {
+    let mySuperId = personObj.userData.superId;
+    socket.emit('GET_USERS_DETAIL', {token: localStorage.token, personId: mySuperId});
+    socket.on('NEW_USERS_DETAIL', ({user}) => {
+      console.log('HOME_USER:', user);
+      if(user.userData.superId === mySuperId) { // возможно эта проверка не нужна
+        chooseMe(user.projects)
+      }
+    })
+    //
+  }
+
 
   return (
     <div className='navbar__social'>
@@ -21,10 +37,10 @@ const Navbar_Social = ({personObj, openPlace, chooseMe}) => {
           Details
         </Button>
       </div>
-      <div className='navbar__social_me' onClick={chooseMe}>
+      <div className='navbar__social_me' onClick={chooseMeHanler}>
         {
           personObj && (
-            personObj.src 
+            personObj.userData.src 
             ? <div className='navbar__social_me_avatar'>
                 <img src="" alt=""/>
               </div>
