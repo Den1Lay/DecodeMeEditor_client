@@ -69,7 +69,8 @@ useEffect(() => {
     // выбор источника данных (вопрос или база) на основе данных PCD данных (чекни коннект)
     
     let dataSource = currentHeight !== 'question' ? workBranch.branch.base[currentHeight] : workBranch.branch.question;
-      const {label, main, comment, picture: {src, alt}} = dataSource;  
+    debugger  
+    const {label, main, comment, picture: {src, alt}} = dataSource;  
 
       // стандарный, пустой пак вопрос, который подставляется, если под не вопрос
       // по факту просто заглушка для того, что бы было что подставить

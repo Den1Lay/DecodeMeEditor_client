@@ -66,6 +66,10 @@ export const deleteData = payload => ({
   type: 'DELETE',
   payload
 })
+export const newFriendProject = payload => ({
+  type: 'NEW_FRIEND_PROJECT',
+  payload
+})
 // export const openProjectSetup = () => ({
 //   type: 'OPEN_PROJECT_SETUP'
 // })

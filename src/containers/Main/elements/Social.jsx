@@ -217,7 +217,20 @@ const Social = (
   )
 }
 
-export default connect(({main: {friends, personObj: {userData: {superId, applicantList}}, accessV, workPerson, friendV}}) => ({
-  friends, superId, applicantList, L: applicantList.length, fL: friends.length, workPerson, accessV, friendV
-}), 
+export default connect((
+  {
+    main: {
+      friends, 
+      personObj: {userData: {superId, applicantList}}, accessV, workPerson, friendV
+    }}) => (
+      {
+        friends, 
+        superId, 
+        applicantList, 
+        L: applicantList.length, 
+        fL: friends.length,
+        workPerson, 
+        accessV, 
+        friendV
+      }), 
 {choosePerson, updateUsers, previewPerson, cleanApplicantList, updateData, changeMaster})(Social)

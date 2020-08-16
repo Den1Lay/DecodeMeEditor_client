@@ -109,6 +109,7 @@ export default (state = defState, action) => {
   }
 
   function returnError () {
+    state.workBranch = {}
     state.workPCD = null;
     state.workBranch.branch = {}
     state.mainPlace = 'error'
@@ -296,6 +297,16 @@ export default (state = defState, action) => {
             (() => {
             })()
           break;
+          case 'new_version': 
+            connected && (() => {
+              const {projectId, workVersion} = data;
+
+              let projectInd = [];
+              mineInd(state.projects, projectId, 'superId', projectInd);
+              state.projects[projectInd[0]].versions.push(workVersion);
+              state.workBranch.v = random;
+            })()
+          break
           case 'versions':
             connected && (() => {
 
@@ -319,18 +330,34 @@ export default (state = defState, action) => {
               state.workBranch = state.projects[realProjectInd[0]].versions[realVersionInd[0]].data;
 
               let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
+              state.workBranch.v = random;
               pathReducer(path, state);
 
               // Проверка на то, что в новой дате, есть данные, с координатами, работающего PCD 
               // Если нет, то выбрасывается ошибка, хотя можно сделать куда мягче, но это уже на rebuild 
+              
 
+              let pcdInd = [];
+              mineInd(state.projectsCoordsData, state.workPCD.projectId, 'proojectId', pcdInd);
+              
               if(state.workBranch !== 'None') {
-                checkBottomData(() => {})
+                debugger
+                localStorage.updateWithDeleteWorkDirFlag = 'false'
+                checkBottomData(() => {localStorage.updateWithDeleteWorkDirFlag = 'true'}); //SUCCESS MOVE not fail
+                debugger
+                if(localStorage.updateWithDeleteWorkDirFlag !== 'true') {
+                  state.projectsCoordsData.splice(pcdInd[0], 1);
+                  state.lastProject = null;
+                  state.workBranch.v = 'c'+random;
+                }
               } else {
                 returnError()
-              }
+                state.projectsCoordsData.splice(pcdInd[0], 1);
+                state.lastProject = null;
+                state.workBranch.v = 'c'+random;
+              } 
 
-              state.workBranch.v = random;
+              
             })()
           break;
           case 'available': 
@@ -384,7 +411,7 @@ export default (state = defState, action) => {
               state.projectsCoordsData.splice(PCDInd[0], 1);
 
             } else {
-
+              debugger
               // в будущем отловить исключение и сделать подхват существующих версий. 
               // А если удаляется последняяя версия, то удаляется проект. Это чекается в рекдакторе версии
               // проще всего полностью снести PCD. потом просто репикнуть. С мапой это на изи делается.
@@ -399,7 +426,8 @@ export default (state = defState, action) => {
             // перебрасывать и удаялять PCD если рабочий проект тот же
             // иначе все остается на месте, просто появится пушка об удалении
 
-            if(state.workPCD.projectId === data.workPCD.projectId) {
+            if(state.workPCD.projectId === workPCD.projectId) {
+              state.workBranch = {}; // модификафии адресованы к .branch. хотя, что?
               state.workBranch.branch = {};
               state.workPCD = null;
               state.mainPlace = 'error';
@@ -477,6 +505,16 @@ export default (state = defState, action) => {
         state.accessV = random;
         return state
       })();
+    case 'NEW_FRIEND_PROJECT': // DISP LOGIN, guest side
+      return (() => {
+        const {personId, project} = payload;
+        let friendInd = [];
+        mineInd(state.friends, personId, ['userData', 'superId'], friendInd);
+        state.friends[friendInd[0]].projects.push(project);
+        state.friendV = random;
+        state.workBranch.v = random;
+        return state;
+      })()
     case 'CHANGE_MASTER':
       debugger
       return state.workPCD
@@ -549,71 +587,59 @@ export default (state = defState, action) => {
       // delete state.workBranch;
 
       //DEBAG SPACE
-      let testObj = {txt: "yes", obj: {insTxt: "insTxt"}, arr: ['super']};
-      let cloneFactory = FastClone.factory(testObj);
-      let testObjClone = cloneFactory(testObj)
+      // let testObj = {txt: "yes", obj: {insTxt: "insTxt"}, arr: ['super']};
+      // let cloneFactory = FastClone.factory(testObj);
+      // let testObjClone = cloneFactory(testObj)
       //DEBAG SPACE
 
-      let projectInd;
-      state.projects.forEach(({superId}, i) => {
-        if(state.workPCD.projectId === superId) {
-          projectInd = i;
-        }
-      });
-      let versionInd;
-      state.projects[projectInd].versions.forEach(({superId}, i) => {
-        if(state.workPCD.workVersion === superId) {
-          versionInd = i
-        }
-      })
+      let projectInd = [];
+      mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd)
+
+      let versionInd = [];
+      mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd)
       // DATA EXAMPLE IS LAST VERSION;
-      let dataExample = state.projects[projectInd].versions[versionInd].data;
+      let dataExample = state.projects[projectInd[0]].versions[versionInd[0]].data;
 
       let DataFactory = FastClone.factory(dataExample);
       let dataClone = new DataFactory(dataExample);
       // debugger
-      const {ways, illustrations} = state.projects[projectInd].versions[versionInd];
+      const {illustrations} = state.projects[projectInd[0]].versions[versionInd[0]];
 
       let newVersionInd = v4();
-      state.projects[projectInd].versions.push({
+      state.projects[projectInd[0]].versions.push({
         comment: payload.comment,
         date,
         superId: newVersionInd,
         master: null,
-        ways,
+        //ways,
         illustrations,
         data: dataClone
       });
 
-      let PCDInd;
-      state.projectsCoordsData.forEach(({projectId}, i) => {
-        if(state.workPCD.projectId === projectId) {
-          PCDInd = i;
-        }
-      });
+      let PCDInd = [];
+      mineInd(state.projectsCoordsData, state.workPCD.projectId, 'projectId', PCDInd);
       
       let PCDFactory = FastClone.factory(state.workPCD[state.workPCD.workVersion]);
       
-      state.projectsCoordsData[PCDInd][newVersionInd] = new PCDFactory(state.workPCD[state.workPCD.workVersion]); // точечное копирование???
-      state.projectsCoordsData[PCDInd].workVersion = newVersionInd;
+      state.projectsCoordsData[PCDInd[0]][newVersionInd] = new PCDFactory(state.workPCD[state.workPCD.workVersion]); // точечное копирование???
+      state.projectsCoordsData[PCDInd[0]].workVersion = newVersionInd;
       
       //delete state.workPCD;
-      state.workPCD = state.projectsCoordsData[PCDInd];
+      state.workPCD = state.projectsCoordsData[PCDInd[0]];
 
-      let newWorkBranch = state.projects[projectInd].versions[state.projects[projectInd].versions.length-1].data; 
+      state.workBranch = state.projects[projectInd[0]].versions[state.projects[projectInd[0]].versions.length-1].data; 
       let path = state.workPCD[state.workPCD.workVersion].path.substring(1);
-      while(path.length) {
-        newWorkBranch = newWorkBranch.branch['q'+path[0]];
-        path = path.substring(1);
-      };
+      pathReducer(path, state);
 
-      newWorkBranch.v = 'v'+random
-      return {
-        ...state,
-        workBranch: newWorkBranch,
-        mainPlace: 'editor'
-      }
+      state.workBranch.v = 'v'+random;
+      state.mainPlace = 'editor';
+      return state
     })()
+    case 'NEW_FRIEND_VERSION':
+      return (() => {
+
+        return state
+      })()
     case 'SAVE_POD': //wb.v
     debugger
     return (() => {
@@ -928,6 +954,7 @@ export default (state = defState, action) => {
     })()
     case 'SELECT_PROJECT': 
     console.log(payload) // projectId
+    debugger
     return (() => {
 
       // этот блок отвечает за то, что бы сейвить myLastProject, которые используется для возвращения домой
@@ -954,6 +981,9 @@ export default (state = defState, action) => {
         state.personObj.userData.myLastProject = payload;
       };
 
+      // Ошибка не добитого PCD это норма, искать его на сервере можно, но лучше здесь
+      // Это и защита от других возможно еще не известных ошибок.
+
       let PCDInd = [];
       mineInd(state.projectsCoordsData, payload, 'projectId', PCDInd);
 
@@ -965,6 +995,8 @@ export default (state = defState, action) => {
 
       let projectInd = [];  // двухсторонная связь, данные 100% существуют.
       mineInd(state.projects, payload, 'superId', projectInd)
+
+      
       // .forEach(({superId}, i) => {
       //   if(payload === superId) {
       //     projectInd = i;
@@ -973,24 +1005,41 @@ export default (state = defState, action) => {
       
       // Хендлинг остутсвия проекта в PCD юзера и компенсация пропуска.
       // Работает как у гостя, так и у юзера.
-
-      if(!PCDInd.length) { // работает при пике проекта у друга и себя, если был делет
-        // add new project in PCD;
+      function restartData() {
         let firstVersionId = state.projects[projectInd[0]].versions[0].superId;
         let workHeight = state.projects[projectInd[0]].versions[0].data.branch.base.length ? "0" : "question";
         state.projectsCoordsData.push({projectId: payload, workVersion: firstVersionId, [firstVersionId]: {path: "0", height: workHeight}})
         PCDInd = state.projectsCoordsData.length-1;
       }
 
+      if(!PCDInd.length) { // работает при пике проекта у друга и себя, если был делет
+        // add new project in PCD;
+        restartData()
+      }
+
       state.workPCD = state.projectsCoordsData[PCDInd]; 
+
+      /// нужно отловить ошибку и выдать первичную дату ---> вынести в функцию обработчик исключений
+
       let versionInd = [];
       mineInd(state.projects[projectInd[0]].versions, state.workPCD.workVersion, 'superId', versionInd);
+      
+      if(!versionInd.length) {
+        // найти wrong pcd и уничтожить
+        let wPCDInd = [];
+        mineInd(state.projectsCoordsData, payload, 'projectId', wPCDInd);
+        state.projectsCoordsData.splice(wPCDInd[0], 1);
+        restartData()
+        versionInd = ['0'];
+        state.workPCD = state.projectsCoordsData[PCDInd]; 
+      } 
+      state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
       // for(let i in ) { //lastProject
       //   if(state.projects[projectInd].versions[i].superId === ) {
       //     versionInd = i;
       //   }
       // };
-      state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
+      
   
       // let workPath = state.workPCD[state.workPCD.workVersion].path.substring(1);
       // while (workPath.length) {
@@ -1063,6 +1112,15 @@ export default (state = defState, action) => {
       return (() => {
         // вызов с вынужденной датой через перепресваивание рабочего проекта
         // грядет эпоха геттеров 
+
+        // ф находит последнюй проект, который хранится в state.personObj.userData.myLastProject
+        // и если он существует, пытается найти его PCD и его самого. В случае, если все данные на месте
+        // создает workBranch и перебрасывает на editor 
+        // Если же он не может найти что то по координатным данным, или если этих самых PCD нет
+        // То он зануляет все важны рычаги (workPCD и workBranch) и выбрасывает на нейтрольное месте.
+        // Откуда можно выбрать другой проект или создать новый.
+        // Алгорит описана в INIT
+
         state.workBranch = {};
         state.projects = payload;
         state.workPerson = state.personObj.userData.superId;
@@ -1125,7 +1183,11 @@ export default (state = defState, action) => {
       // будут ли происходить изменения в друзьях при модифировании 
       return (() => {
         //payload === superId [friend]
-        // ОБРАБОТАТЬ ВСЕ ИСКЛЮЧЕНИЯ...
+        
+        // по сути работы ф похожа на chooseMe, так что все подробное объяснение там.
+        // Возможно функции будут слиты в одну.
+        // Алгорит описана в INIT
+
         debugger
         let friendInd = [];
         mineInd(state.friends, payload, ['userData', 'superId'], friendInd);
@@ -1197,16 +1259,27 @@ export default (state = defState, action) => {
       return (() => {
         // Прокоментить каждое действие и интегрировать mineInd
 
-        // РЕВОРК ! (пробелема с пустыми данными...) 
-        // РЕФАКТОРИИИНГ  !!!!! !! ! (хотя бы до первого деплоя)
+        // Важнейший элемент в работе приложения. 
+        // Отвечает за формирование нормального рабочего состояния, на основе данных в payload
+        // Алгоритм: 1. Прокидывает основные данные (даже если они пустые)
+        // 2. Определяет рабочий PCD на основе последнего проекта. -> Если нет проекта, вернет [],
+        // Который отловится дальше и выбросит исключение.
+        // 3. Определяет был ли юзер в другом профиле или у себя на момент последнего экшна. 
+        // На основе этой инфы выбирается источник проектов, от которого зависит workBranch.
+        // 4. Утверждается рабочая персона, от которой зависит работа updateDate и обновление myLastProject, 
+        // а так же superId в friends проектах.
+        // 5. Находится рабочий проект, или нет.
+        // 6. Находится рабочая версия или нет.
+        // 7. И ластовые проверки на существование рабочей высоты, Если хоть чего то нет, то редирект на error.
+
         console.log('%c%s', 'color: pink; font-size: 22px', "DEBUG:", payload);
         const {friends, personObj: {projects, projectsCoordsData, lastProject, lastPerson, userData: {superId}}} = payload;
-        state.personObj = payload.personObj
-        //state.projects = projects;
-        state.projectsCoordsData = state.personObj.projectsCoordsData;
-        state.friends = friends
+        state.personObj = payload.personObj // 1
+
+        state.projectsCoordsData = state.personObj.projectsCoordsData; // 1
+        state.friends = friends // 1
         // Всегда можно найти себя по этому адресу..
-        //state.currentProject = lastProject;
+      
         state.workBranch = {};
         
         let projectsCoordInd = [];

@@ -6,6 +6,7 @@ import {
   addFriend, 
   accessControl, 
   updateData, 
+  newFriendProject,
   deleteData,
   setIllustrations,
   setMaster} from '@/actions'
@@ -104,8 +105,17 @@ socket
     })()
   })
   .on('NEW_FRIEND_PROJECT', ({project, sender}) => {
+    debugger
     const {main: {personObj: {userData: {superId}}}} = store.getState();
-    superId !== sender 
+    superId !== sender && store.dispatch(newFriendProject({personId: sender, project}));
+  })
+  .on('NEW_FRIEND_VERSION', ({person, projectId, workVersion, sender}) => {
+    debugger
+    const {main: {personObj: {userData: {superId}}}} = store.getState();
+    superId !== sender && (() => {
+      store.dispatch(updateData({data: {person, projectId, workVersion}, address: 'new_version'}));
+      //openNotification({type: 'info', message: 'New version', description: })
+    })()
   })
   .on('DELETE', ({person, workPCD, target, sender}) => {
     store.dispatch(updateData({data: {person, workPCD, target}, address: 'delete'}));
