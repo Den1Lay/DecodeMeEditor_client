@@ -3,8 +3,8 @@
 
 // БАГ. Не обновляется состояние выбранного проекта, после выброса. Лечится рестартом... Причина скорее
 // всего в том, что компоненты не до конца управляемы. Хранят старые состояния...
-import React, {useState} from 'react'
-import {connect} from 'react-redux'
+import React, {useState, useEffect} from 'react'
+import {connect, batch} from 'react-redux'
 import classNames from 'classnames'
 
 import {Input, Button} from '@/components'
@@ -24,31 +24,35 @@ const Navbar_Main = (
   }) => {
 debugger //changeMaster(false)
   //const {projectId, workVersion} = workPCD || {projectId: null, workVersion: null}
+  //const [projectsDrop, setProjectsDrop] = useState(null)
+  //const [checkData, setCheckData] = useState({cpId: null, cpL: null})
+  //const [currentProject, setCurrentProject] = useState(null)
   const [showProjects, setShowProjects] = useState(false);
+  
   const [hideDls, setHideDls] = useState(true);
-  function projectsSubmitHandl(ev) {
-    ev.persist()
-  }
-  function projectsPickHandl(ev) {
-    ev.persist()
-  }
-  function projectsInputHand(ev) {
-    ev.persist()
-    console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev.tarrget.value)
-  }
-  function projectsShowHandl(ev) {
-    ev.persist()
-    setShowProjects(!showProjects)
-    console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
-  }
-  function savesShowHandl(ev) {
-    ev.persist();
-    console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
-  }
-  function mapShowHandl(ev) {
-    ev.persist();
-    console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
-  }
+  // function projectsSubmitHandl(ev) {
+  //   ev.persist()
+  // }
+  // function projectsPickHandl(ev) {
+  //   ev.persist()
+  // }
+  // function projectsInputHand(ev) {
+  //   ev.persist()
+  //   console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev.tarrget.value)
+  // }
+  // function projectsShowHandl(ev) {
+  //   ev.persist()
+  //   setShowProjects(!showProjects)
+  //   console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
+  // }
+  // function savesShowHandl(ev) {
+  //   ev.persist();
+  //   console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
+  // }
+  // function mapShowHandl(ev) {
+  //   ev.persist();
+  //   console.log('%c%s', 'color: blue; font-size: 12px;', 'EV:', ev)
+  // }
 
 
   // function pickElemHandl(ev) {
@@ -56,10 +60,33 @@ debugger //changeMaster(false)
   //   console.log('Picked project ind: ', key)
   // }
 
-  function onSelectHandl(ev) {
-    
-    //console.log('ON_SELECT_EVENT', ev)
+  debugger
+  let projectInd = undefined;
+  for(let i=0;i<projects.length;i++) {
+    if(projects[i].superId === projectId) {
+      projectInd = i;
+    }
+  };
+  let versionInd = undefined;
+  if(projectInd !== undefined) {
+    for(let i in projects[projectInd].versions) {
+      if(projects[projectInd].versions[i].superId === workVersion) {
+        versionInd = i;
+      }
+    }
   }
+  // const {cpId, cpL} = checkData; 
+  // useEffect(() => {
+  //   if(projectsDrop === null || cpId !== projectId || cpL !== projects.length) {
+  //     const drop = 
+  //     ;
+
+  //   batch(() => {
+  //     setProjectsDrop(drop);
+  //     setCheckData({cpId: projectId, cpL: projects.length})
+  //   })
+  //   }
+  // })
   
 
   function makeMenu({data, addHandler, current, selectHandl}) { // ребилдни PCD там должен быть uuid в индикаторе версии
@@ -92,23 +119,7 @@ debugger //changeMaster(false)
       </div>
     );
   }
-  //console.log('PROJ_LENGHT:',projects.length)
-  debugger
-  let projectInd = undefined;
-  for(let i=0;i<projects.length;i++) {
-    if(projects[i].superId === projectId) {
-      projectInd = i;
-    }
-  };
-  let versionInd = undefined;
-  if(projectInd !== undefined) {
-    for(let i in projects[projectInd].versions) {
-      if(projects[projectInd].versions[i].superId === workVersion) {
-        versionInd = i;
-      }
-    }
-  }
-
+  
   return (
     <div className='navbar__mainActions'>
       <div className='navbar__mainActions_projects'>
@@ -140,16 +151,22 @@ debugger //changeMaster(false)
         : <Input place='navbar' placeholder='Nonee'/>
         }
       </div>
-      <div className='navbar__mainActions_secure'>
-        <Button place='navbar' clickHandler={() => openPlace('setup')}>
-          Setup
-        </Button>
-      </div>
-      <div className='navbar__mainActions_map'>
-        <Button place='navbar' clickHandler={() => openPlace('map')}>
-          Map
-        </Button>
-      </div>
+      {
+        projectId && 
+        <>
+          <div className='navbar__mainActions_secure'>
+            <Button place='navbar' clickHandler={() => openPlace('setup')}>
+              Setup
+            </Button>
+          </div>
+          <div className='navbar__mainActions_map'>
+            <Button place='navbar' clickHandler={() => openPlace('map')}>
+                Map
+            </Button> 
+          </div>
+        </>
+      }
+      
       
     </div>
   )

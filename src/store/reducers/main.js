@@ -18,7 +18,6 @@
 // производят обратный вызов, которые отлавливаются всеми кто в комнате. (нами тоже(филтрятся через sender))
 // 
 
-///!!! Гость может снести branch на котором я стою, что тогда будет?
 import {format, startOfWeek} from 'date-fns';
 import {v4} from 'uuid'
 import FastClone from 'fastest-clone'
@@ -109,10 +108,11 @@ export default (state = defState, action) => {
   }
 
   function returnError () {
-    state.workBranch = {}
+    state.workBranch = {};
     state.workPCD = null;
-    state.workBranch.branch = {}
-    state.mainPlace = 'error'
+    state.workBranch.branch = {};
+    state.mainPlace = 'error';
+    state.workBranch.v = random;
   }
 
   function checkBottomData (successMove) {
@@ -371,8 +371,11 @@ export default (state = defState, action) => {
     
             let versionInd = [];
             mineInd(state.projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
-
-            state.projects[projectInd[0]].versions[versionInd[0]].master = pass;
+            if(state.projects[projectInd[0]].versions[versionInd[0]].master !== state.personObj.userData.nickName) {
+              state.projects[projectInd[0]].versions[versionInd[0]].master = pass;
+            }
+           
+            
             
           })()
           break;
@@ -432,7 +435,7 @@ export default (state = defState, action) => {
               state.workPCD = null;
               state.mainPlace = 'error';
             }
-            
+            state.workBranch.v = random
           })()
           break
           default:
@@ -528,11 +531,17 @@ export default (state = defState, action) => {
             let myNickName = state.personObj.userData.nickName
             state.projects[projectInd[0]].versions[versionInd[0]].master = myNickName;
             state.availablePayload = myNickName;
+            state.workBranch.v = 'a'+random;
           } else { // unsetMe
-            state.projects[projectInd[0]].versions[versionInd[0]].master = null;
-            state.availablePayload = null;
+            if(state.projects[projectInd[0]].versions[versionInd[0]].master === state.personObj.userData.nickName) {
+              state.projects[projectInd[0]].versions[versionInd[0]].master = null;
+              state.availablePayload = null;
+              state.workBranch.v = 'a'+random;
+            }
+            
+            
           }
-        state.workBranch.v = 'a'+random;
+        
         return state
       })()
       : state
@@ -957,6 +966,9 @@ export default (state = defState, action) => {
     debugger
     return (() => {
 
+      // Это не просто точка входа в проект, это МЕД БРИГАДА, которая уничтожает вредоносный PCD и делает новый, причем 
+      // Отлавливаются проблемы на всех уровнях.. с последующей перезаписью через приставку.
+
       // этот блок отвечает за то, что бы сейвить myLastProject, которые используется для возвращения домой
       // и как альтернатива работе дом, так же сейвиться последний проект у друга... для восстановления 
       // ласт состояния у друга, после всех проверок..
@@ -987,29 +999,17 @@ export default (state = defState, action) => {
       let PCDInd = [];
       mineInd(state.projectsCoordsData, payload, 'projectId', PCDInd);
 
-      // .forEach(({projectId}, i) => {
-      //   if(payload === projectId) {
-      //     PCDInd = i;
-      //   }
-      // });
-
       let projectInd = [];  // двухсторонная связь, данные 100% существуют.
       mineInd(state.projects, payload, 'superId', projectInd)
-
-      
-      // .forEach(({superId}, i) => {
-      //   if(payload === superId) {
-      //     projectInd = i;
-      //   }
-      // });
       
       // Хендлинг остутсвия проекта в PCD юзера и компенсация пропуска.
       // Работает как у гостя, так и у юзера.
+
       function restartData() {
         let firstVersionId = state.projects[projectInd[0]].versions[0].superId;
         let workHeight = state.projects[projectInd[0]].versions[0].data.branch.base.length ? "0" : "question";
         state.projectsCoordsData.push({projectId: payload, workVersion: firstVersionId, [firstVersionId]: {path: "0", height: workHeight}})
-        PCDInd = state.projectsCoordsData.length-1;
+        PCDInd = [state.projectsCoordsData.length-1];
       }
 
       if(!PCDInd.length) { // работает при пике проекта у друга и себя, если был делет
@@ -1017,7 +1017,7 @@ export default (state = defState, action) => {
         restartData()
       }
 
-      state.workPCD = state.projectsCoordsData[PCDInd]; 
+      state.workPCD = state.projectsCoordsData[PCDInd[0]]; 
 
       /// нужно отловить ошибку и выдать первичную дату ---> вынести в функцию обработчик исключений
 
@@ -1031,21 +1031,36 @@ export default (state = defState, action) => {
         state.projectsCoordsData.splice(wPCDInd[0], 1);
         restartData()
         versionInd = ['0'];
-        state.workPCD = state.projectsCoordsData[PCDInd]; 
+        state.workPCD = state.projectsCoordsData[PCDInd[0]]; 
       } 
       state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
-      // for(let i in ) { //lastProject
-      //   if(state.projects[projectInd].versions[i].superId === ) {
-      //     versionInd = i;
-      //   }
-      // };
       
-  
-      // let workPath = state.workPCD[state.workPCD.workVersion].path.substring(1);
-      // while (workPath.length) {
-      //   state.workBranch = state.workBranch.branch['q'+workPath[0]];
-      //   workPath = workPath.substring(1);
-      // };
+      // нужно добавить проверку на существование рабочей высоты и пода.. ибо данные в PCD могли устареть
+      // в том смысле, что этих высот и путей уже нет.
+
+      let path = state.workPCD[state.workPCD.workVersion].path.substring(1)
+      pathReducer(path, state);
+      debugger
+      if(state.workBranch !== 'None') {
+        debugger
+        localStorage.chooseProjectFlag = 'false'
+        checkBottomData(() => {localStorage.chooseProjectFlag = 'true'});
+        debugger
+        if(localStorage.chooseProjectFlag !== 'true') {
+          state.projectsCoordsData.splice(PCDInd[0], 1);
+          restartData();
+          state.workPCD = state.projectsCoordsData[PCDInd[0]];
+            // чекнуть последствия таких включений 
+          //state.workBranch.branch = state.projects[projectInd[0]].versions[versionInd[0]].data.branch;
+        }
+      } else {
+        state.projectsCoordsData.splice(PCDInd[0], 1);
+        restartData();
+        state.workPCD = state.projectsCoordsData[PCDInd[0]];
+         // чекнуть последствия таких включений 
+        //state.workBranch.branch = state.projects[projectInd[0]].versions[versionInd[0]].data.branch;
+      } 
+      state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
       state.workBranch.v = 'c'+random;
       state.mainPlace = 'editor';
       return {
@@ -1067,6 +1082,9 @@ export default (state = defState, action) => {
         const height = state.projects[projectInd[0]].versions[versionInd[0]].data.branch.base.length ? '0' : 'question';
         state.workPCD[payload] = {path: '0', height}
       } 
+
+      // check wron
+
       state.workPCD.workVersion = payload;
       
       state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;

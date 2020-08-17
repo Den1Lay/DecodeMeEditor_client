@@ -38,18 +38,20 @@ const SelectBase = ({changeHandler, isCreate, isSuper, projects, friends, workPC
   let options =  [  ...[{value: 'all', disabled:false}],
     {value: nickName, disabled: true}]
     .concat(friends.map(({userData:{superId, nickName}}) => ({value: nickName, superId, disabled: false})))
-  let projectInd;
-  for(let i in projects) {
-    if(projects[i].superId === workPCD.projectId) {
-      projectInd = i;
-    }
-  };
+  
 
   if(isCreate) {
     // сделай проверку на повторение никнейма и если она срабатывает, то модифицируй ник (1)
     defData = [nickName];
   } else {
-    
+
+    let projectInd;
+    for(let i in projects) {
+      if(projects[i].superId === workPCD.projectId) {
+        projectInd = i;
+      }
+    };
+
     if(isSuper) {
       defData = superIdToNick(projects[projectInd].superAccess);
     } else {

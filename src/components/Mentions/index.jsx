@@ -6,13 +6,14 @@ import './Mentions.scss'
 const MentionsBase = ({row, placeholder='', changeHandler, value, disabled=false}) => {
   return (
     <Mentions 
-
+      readOnly={disabled}
       value={value}
       onChange={changeHandler}
       rows={row}
       placeholder={placeholder}
       className='realMentions'
-      disabled={disabled}>
+      //disabled={disabled}
+      >
   </Mentions>
   )
 }

@@ -24,7 +24,6 @@ const Social = (
     previewPerson, 
     updateUsers
   }) => {
-  debugger
   // возможность работать с челом в зависимости от доступов с его стороны...
   const [person, setPerson] = useState(null);
   const [personDetail, setPersonDetail] = useState(null);
@@ -62,8 +61,6 @@ const Social = (
       })
     };
     return function() {
-      debugger
-      // по фа
 
       const {main: {mainPlace, workPerson, personObj: {userData: {superId}}}} = store.getState();
       if(person && superId === workPerson && mainPlace !== 'social') {

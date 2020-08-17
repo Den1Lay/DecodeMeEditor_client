@@ -32,6 +32,7 @@ const Editor = (
     workPCD,
     changeMaster, 
     illustrations,
+    accessed,
     wayObj,
     ways,
     setIllustrations, 
@@ -223,7 +224,7 @@ useEffect(() => {
       <div className='editor__left'>
         <div style={{display: 'flex'}}>
           <div className='editor__left_dropMenu'>
-          <Button clickHandler={() => {
+          <Button disabled={!accessed} clickHandler={() => {
              currentHeight !== null && (workBranch.branch.choseCount === 0 || currentHeight === 'question') && typeBtnHandler();
           }}>
             {selectedType === '0' ? "POD" : "QUESTION"}
@@ -231,17 +232,18 @@ useEffect(() => {
             
           </div>
           <div className='editor__left_label'>
-            <Input value={label} placeholder='Label' changeHandler={(ev) => {ev.persist(); setData({...data, label: ev.target.value}); eventHandl()}} />
+            <Input disabled={!accessed} value={label} placeholder='Label' changeHandler={(ev) => {ev.persist(); setData({...data, label: ev.target.value}); eventHandl()}} />
           </div>
         </div>
         <div className='editor__left_dialog'>
-          <Mentions value={mainPart} row={10} placeholder='Main part' changeHandler={ev => {setData({...data, mainPart: ev}); eventHandl()}}/>
+          <Mentions disabled={!accessed} value={mainPart} row={10} placeholder='Main part' changeHandler={ev => {setData({...data, mainPart: ev}); eventHandl()}}/>
         </div>
         <div className='editor__left_comment'>
-          <Mentions value={comment} row={6} placeholder='Comment/analysis' changeHandler={ev => {setData({...data, comment: ev}); eventHandl()}}/>
+          <Mentions disabled={!accessed} value={comment} row={6} placeholder='Comment/analysis' changeHandler={ev => {setData({...data, comment: ev}); eventHandl()}}/>
         </div>
         <div className={classNames('editor__left_tabs','editor__left_tabs'+ (selectedType === '1' ? '-show' : '-hide'))}>
           <Answers 
+            disabled={!accessed}
             setAnswers={({activeKey, panes: answers}) => {setData({...data, answers, activeKey}); eventHandl()}} 
             setActiveKey={({activeKey}) => setData({...data, activeKey})}  
             value={{panes: answers, activeKey}}/>
@@ -271,7 +273,7 @@ useEffect(() => {
           <div className='editor__right_save'>
             <div className='editor__right_save_info'>{!saveState && <div>*</div>}</div>
             <div className='editor__right_save_btn'>
-              <Button clickHandler={() => {savePod({selectedType, data}); setSaveState(true)}}>
+              <Button disabled={!accessed}  clickHandler={() => {savePod({selectedType, data}); setSaveState(true)}}>
                 SAVE
               </Button>
             </div>
@@ -279,6 +281,7 @@ useEffect(() => {
         </div>
         <div className='editor__right_dialog'>
           <ArtPart 
+            disabled={!accessed} 
             artSrc={artSrc}
             value={artsDesription} 
             row={10} 
@@ -293,6 +296,7 @@ useEffect(() => {
         </div>
         <div className='editor__right_branchDir'>
           <Directions 
+            disabled={!accessed} 
             row={7}
             wayHandler={() => ({})}
             branchHandler={ev => { setData({...data, wayDirection: ev}); eventHandl();}}
@@ -317,7 +321,7 @@ export default connect(({main: {workBranch, workPCD, projects, personObj, workPe
   // мастер дата - информация о присутствии какого - либо чела за работой над версией. Используется для того
   // Что бы локать возможность редачить дригим персонажам, которые сейчас просматривают проект, а иначе нужно буфферить
   // То что воводит один, отправляет другой. В общем исключаются другие источники истины, кроме рабочего чела.
-
+  debugger
   let projectInd = [];
   let versionInd = [];
   let master = null;
@@ -329,19 +333,27 @@ export default connect(({main: {workBranch, workPCD, projects, personObj, workPe
     master = projects[projectInd[0]].versions[versionInd[0]].master
   };
 
+  const nickName = personObj.userData.nickName;
   //let wayInd = [];
   //mineInd(projects[projectInd[0]].versions[versionInd[0]].ways, workBranch.wayId, 'wayId', wayInd);
   //wayObj = projects[projectInd[0]].versions[versionInd[0]].ways[wayInd[0]];
   // я не должен думать, есть ли здесь эти данные.... 
+  let accessed = false;
+  if(projects[projectInd[0]].superAccess.includes(personObj.userData.superId)) {
+    if(master === null || master === nickName) {
+      accessed = true;
+    }
+  }
   return {
     master,
     illustrations:workPCD ? projects[projectInd[0]].versions[versionInd[0]].illustrations : [],
-    nickName: personObj.userData.nickName,
+    nickName,
     //wayObj, 
     v: workBranch.v,
     workBranch,
     person: workPerson,
     workPCD,
+    accessed,
     //ways: projects[projectInd[0]].versions[versionInd[0]].ways[wayInd[0]],
     paths:workPCD ? projects[projectInd[0]].versions[versionInd[0]].paths : [],
     currentHeight: workPCD ? workPCD[workPCD.workVersion].height : null, // обертка для поддержания первичной логики

@@ -32,10 +32,10 @@
       @include navbarsElems(10, 0 1.3vh 0 0)
     }
     &_saves {
-      @include navbarsElems(4, 0 1.3vh 0 0)
+      @include navbarsElems(4, 0 0 0 0)
     }
     &_secure {
-      @include navbarsElems(1, 0 1.3vh 0 0)
+      @include navbarsElems(1, 0 1.3vh 0 1.3vh)
     }
     &_map {
       @include navbarsElems(1, 0)
@@ -45,36 +45,66 @@
   &__social {
     @include flexNavbar(5.2);
     &_fastAccess {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      // &:hover {
+      //   overflow-x: scroll;
+      // }
       @include navbarsElems(10, 0 1.3vh 0 1.3vh);
-      color: $light
+      color: $light;
+      .friendsList {
+        position: absolute;
+        left: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center ;
+      }
     }
     &_details {
       @include navbarsElems(2, 0 1.3vh 0 0)
     }
     &_me {
       @include navbarsElems(1, 0 1.3vh 0 0);
-      &_avatar {
-        &_alt {
-          width: 3.7vh;
-          height: 3.7vh;
-          border: 1px solid $light;
-          color: $light;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          border-radius: 50%;
-          box-shadow: none;
-          transition: 0.3s ease-in-out;
-          cursor: pointer;
-          &:hover {
-            transition: 0.3s ease-in-out;
-            box-shadow: 0 0 3px 1px $light
-          }
-        }
-      }
+      
     }
   }
 }
+
+.avatar {
+  &_alt {
+    width: 3.68vh;
+    height: 3.68vh;
+    background-color: $dirtyLight;
+    color: $dark;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 7%;
+    //box-shadow: none;
+    transition: 0.3s ease-in-out;
+    &:hover {
+      transition: 0.3s ease-in-out;
+      background-color: $light;
+    }
+    &_me {
+      background-color: transparent;
+      border: 1px solid $light;
+      color: $light;
+      &:hover {
+        transition: 0.3s ease-in-out;
+        //box-shadow: 0 0 3px 1px $light;
+        color: $dark
+      }
+    }
+    cursor: pointer;
+    
+  }
+}
+
 .cascades {
   position: absolute;
   background-color: $light;
