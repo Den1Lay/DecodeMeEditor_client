@@ -4,7 +4,7 @@ import { Tag, Upload, message, Select, Tooltip, Popconfirm} from 'antd';
 
 import { InboxOutlined, FileAddOutlined, DeleteOutlined} from '@ant-design/icons';
 
-import {Mentions, Button, BoxImage, ImageTooltip} from '@/components';
+import {Mentions, Button, BoxImage, ImageTooltip, CheckTags} from '@/components';
 
 import './ArtPart.scss'
 
@@ -23,7 +23,8 @@ const ArtPart = (
     illustrations, 
     unsetIllust, 
     setIllust, 
-    removeIllust
+    removeIllust,
+    readOnly
   }) => {
   // const wrapperRef = useRef(null);
   // const pictureRef = useRef(null)
@@ -33,8 +34,6 @@ const ArtPart = (
   // const [workSrc, setWorkSrc] = useState(null)
   // const [restart, setRestart] = useState(true)
   // const [show, setShow] = useState(false)
-
-  debugger
 
   // Фикс пробликиваний и недорабатывания..
   // useEffect(() => {
@@ -73,11 +72,20 @@ const ArtPart = (
   //   setArtSrc(illustrations[0]) // сделать здесь полноценные редактор пикч.
   // } 
 
+  let  checkTabsProps = {
+    firstVal: 'Description',  
+    firstHandler:() => setWorkPlace('description'), 
+    secondVal: 'Picture', 
+    secondHandler: () => setWorkPlace('picture'), 
+    checkData: workPlace === 'description'
+  }
+
   return (
     <div className='artPart'>
       <div className='artPart__main'>
         <div className={classNames('artPart__main_description', 'artPart__main_description'+(workPlace==='picture'?'-hide':'-show'))}>
           <Mentions 
+            readOnly={readOnly}
             value={value} 
             row={row} 
             placeholder={`Arts description`} 
@@ -88,9 +96,9 @@ const ArtPart = (
             ? <div className='pictureWrapper'>
                 <div className='pictureWrapper__shadow'>
                   <div className='buttonWrapper'>
-                    <span className='pictureWrapper__shadow_unset' onClick={unsetIllust}>x</span>
+                    <span className='pictureWrapper__shadow_unset' onClick={(ev) => !readOnly && unsetIllust(ev)}>x</span>
                     <div className='pictureWrapper__shadow_remove'>
-                      <Popconfirm placement="rightBottom" title={'Remove this picture'} onConfirm={() => removeIllust(artSrc)} okText="Yes" cancelText="No">
+                      <Popconfirm placement="rightBottom" title={'Remove this picture'} onConfirm={() => !readOnly && removeIllust(artSrc)} okText="Yes" cancelText="No">
                         <DeleteOutlined style={{color: 'white'}} />
                       </Popconfirm>  
                     </div>
@@ -99,12 +107,13 @@ const ArtPart = (
                 <BoxImage artSrc={artSrc} />
               </div>
             : <div className='artPart__main_picture_inputs'>
-                <input style={{display: 'none'}} name='file' type='file' id='file' onChange={fileHandler} />
+                <input disabled={readOnly} style={{display: 'none'}} name='file' type='file' id='file' onChange={fileHandler} />
                 <label htmlFor='file'><FileAddOutlined style={{fontSize: '3vh', color: "grey", marginBottom: '1vh', cursor: 'pointer'}} /></label>
                 {/* <div className={classNames('artPart__main_picture_inputs_preview', 'artPart__main_picture_inputs_preview'+(show ? '-show' : '-hide'))}>
                   <BoxImage artSrc={artSrc} /> 
                 </div> */}
                 <Select
+                  disabled={readOnly}
                   style={{width: '100%'}}
                   showSearch
                   placeholder="Select illustration"
@@ -134,7 +143,8 @@ const ArtPart = (
           }
         </div>
       </div>
-      <div className='artPart__controllers'>
+      <CheckTags {...checkTabsProps} />
+      {/* <div className='artPart__controllers'>
         <CheckableTag
           checked={workPlace === 'description'}
           onClick={() => workPlace !== 'description' && setWorkPlace('description')}
@@ -147,7 +157,7 @@ const ArtPart = (
         >
           Picture
         </CheckableTag>
-      </div>
+      </div> */}
     </div>
   )
 }

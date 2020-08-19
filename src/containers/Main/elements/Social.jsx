@@ -96,7 +96,7 @@ const Social = (
     socket.emit('FRIEND_REQUEST', {token: localStorage.token, person})
   };
 
-  let availableProjects = personDetail && personDetail.projects.filter( ({access}) => access.includes(superId) || access.includes('all') )
+  let availableProjects = personDetail && personDetail.projects.filter(({access}) => access.includes(superId) || access.includes('all') )
 
   function chooseHandler() {
     if(availableProjects.length && isFriend) {

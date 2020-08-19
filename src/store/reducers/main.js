@@ -107,6 +107,19 @@ export default (state = defState, action) => {
     state.mapCurrent = [];
   }
 
+  (() => {
+    //const StateFactory = FastClone.factory(state);
+    if(!Array.isArray(window.reduxHistory)) {
+      window.reduxHistory = []
+    }
+    window.reduxHistory.push({
+      //state: new StateFactory(state), Он просто критически капризный 
+      // картина будет восстанавливаться по Тайпам и пейлоадам...
+      type,
+      payload,
+    })
+  })()
+
   function returnError () {
     state.workBranch = {};
     state.workPCD = null;
@@ -143,18 +156,20 @@ export default (state = defState, action) => {
 
       return (() => {
         debugger
-        const wayId = v4();
-        const {name, description, access, superAccess} = payload
+        const wayId = v4(),
+        versionId = 'v'+v4(),
+        projectId = 'p'+v4(),
+        {name, description, access, superAccess} = payload;
         state.projects.unshift({
           name,  
           description,
-          superId: v4(), 
+          superId: projectId, 
           access,
           superAccess,
           versions: [{
           comment: 'Init',
           date,
-          superId: v4(),
+          superId: versionId,
           master: null,
           illustrations: [],
           ways: [{wayId, color: 'green', wayDirection: ''}],
@@ -242,6 +257,26 @@ export default (state = defState, action) => {
           superKicked,
           newObservers,
           newEditord
+        }
+      })()
+
+    case 'LOGOUT': 
+      return (() => {
+        delete localStorage.token;
+        return {
+          projectsCoordsData: [],
+          projects: false,
+          workPerson: null,
+          workPCD: null,
+          workBranch: null,
+          mapStore: [],
+          mapGrid: [],  //Мап ресы
+          mapCurrent: '',
+          availablePayload: null,
+          users: [], // all exist users
+          personObj: null, // Всегда можно найти себя по этому адресу..
+          friends: [],
+          mainPlace: 'editor', // project save
         }
       })()
     case 'OPEN_PLACE': 
@@ -614,7 +649,7 @@ export default (state = defState, action) => {
       // debugger
       const {illustrations} = state.projects[projectInd[0]].versions[versionInd[0]];
 
-      let newVersionInd = v4();
+      let newVersionInd = 'v'+v4();
       state.projects[projectInd[0]].versions.push({
         comment: payload.comment,
         date,
@@ -1095,7 +1130,7 @@ export default (state = defState, action) => {
     // case 'PREVIEW_PERSON': 
     // return (() => {
     //   // ОЧЕНЬ ПЛОХАЯ ИДЕЯ... ОЧЕНЬ.. без... И все таки это улетает на ребилд после альфы.
-    //   // 
+
     //   console.log("PREVIEW_PERSON: ", payload) 
     //      // payload = {userData, projects, }
     //   const {projects, userData} = payload;

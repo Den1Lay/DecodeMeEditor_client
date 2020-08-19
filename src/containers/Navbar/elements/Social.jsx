@@ -12,18 +12,32 @@ import {Button} from '@/components'
 
 import {openPlace, chooseMe, updateData, choosePerson, changeMaster} from '@/actions'
 
-const Navbar_Social = ({personObj, friends, openPlace, chooseMe, updateData, choosePerson, changeMaster}) => {
+const Navbar_Social = (
+  {
+  personObj, 
+  workPerson,
+  friends, 
+  openPlace, 
+  chooseMe, 
+  updateData, 
+  choosePerson, 
+  changeMaster
+}) => {
 
 
   function chooseMeHanler() {
     let mySuperId = personObj.userData.superId;
-    socket.emit('GET_USERS_DETAIL', {token: localStorage.token, personId: mySuperId});
-    socket.on('NEW_USERS_DETAIL', ({user}) => {
-      console.log('HOME_USER:', user);
-      if(user.userData.superId === mySuperId) { // возможно эта проверка не нужна
-        chooseMe(user.projects)
-      }
-    })
+    if(workPerson !== mySuperId) {
+      socket.emit('GET_USERS_DETAIL', {token: localStorage.token, personId: mySuperId});
+      socket.on('NEW_USERS_DETAIL', ({user}) => {
+        console.log('HOME_USER:', user);
+        if(user.userData.superId === mySuperId) { // возможно эта проверка не нужна
+          chooseMe(user.projects)
+        }
+      })
+    } else {
+      openPlace('profile')
+    }
     //
   }
 
@@ -75,5 +89,5 @@ const Navbar_Social = ({personObj, friends, openPlace, chooseMe, updateData, cho
   )
 }
 
-export default connect(({main: {friends, personObj}}) => ({friends, personObj}), 
+export default connect(({main: {friends, personObj, workPerson}}) => ({friends, personObj, workPerson}), 
   {openPlace, chooseMe, updateData, choosePerson, changeMaster})(Navbar_Social);

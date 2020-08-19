@@ -10,11 +10,15 @@ import classNames from 'classnames'
 import {Input, Button} from '@/components'
 import {Dropdown,Menu} from 'antd'
 
+import {mineInd} from '@/utils'
+
 import {addProject, openPlace, selectProject, selectVersion, changeMaster} from '@/actions'
 
 const Navbar_Main = (
   {
     projects, 
+    superAccessed,
+    isOwner,
     selectProject, 
     selectVersion, 
     projectId, 
@@ -105,11 +109,14 @@ debugger //changeMaster(false)
     let curProjectInd = current+'';
     return (
       <div className="setuper" style={{width: '100%', display: "flex", flexDirection: 'column'}}>
-        <div>
-          <Button clickHandler={addHandler}>
-            ADD NEW
-          </Button>
-        </div>
+        {
+          isOwner &&
+          <div>
+            <Button clickHandler={addHandler}>
+              ADD NEW
+            </Button>
+          </div>
+        }
         <Menu 
           onSelect={selectHandl}
           //defaultSelectedKeys={[curProjectInd]}
@@ -153,12 +160,15 @@ debugger //changeMaster(false)
       </div>
       {
         projectId && 
-        <>
-          <div className='navbar__mainActions_secure'>
-            <Button place='navbar' clickHandler={() => openPlace('setup')}>
-              Setup
-            </Button>
-          </div>
+        <>  
+          {
+            superAccessed &&
+            <div className='navbar__mainActions_secure'>
+              <Button place='navbar' clickHandler={() => openPlace('setup')}>
+                Setup
+              </Button>
+            </div>
+          }
           <div className='navbar__mainActions_map'>
             <Button place='navbar' clickHandler={() => openPlace('map')}>
                 Map
@@ -173,10 +183,24 @@ debugger //changeMaster(false)
 }
 //
 export default connect(
-  ({main: {demo_projects, projects, workPCD, workBranch}})=>({
-    projects,
-    projectId: workPCD ? workPCD.projectId : null,
-    workVersion: workPCD ? workPCD.workVersion : null,
-    v: workBranch.v
-  }), 
+  ({main: {demo_projects, projects, workPCD, workBranch, personObj, workPerson}}) => {
+    let superAccessed = false;
+
+    const checkAccess = accesses => accesses.includes(personObj.userData.superId) || accesses.includes('all');
+
+    if(workPCD) {
+      let projectInd = []; 
+      mineInd(projects, workPCD.projectId, 'superId', projectInd);
+      superAccessed = checkAccess(projects[projectInd[0]].superAccess)
+    };
+
+    return {
+      projects: projects.filter(({access}) => checkAccess(access)),
+      projectId: workPCD ? workPCD.projectId : null,
+      workVersion: workPCD ? workPCD.workVersion : null,
+      superAccessed,
+      isOwner: workPerson === personObj.userData.superId,
+      v: workBranch.v
+    }
+  }, 
   {addProject, openPlace, selectProject, selectVersion, changeMaster})(Navbar_Main)

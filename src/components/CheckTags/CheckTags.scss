@@ -1,0 +1,36 @@
+@import '@/styles/variables';
+
+.checkTags {
+  width: 100%;
+  display: flex;
+  margin-top: 1.3vh;
+  :first-child {
+    margin-right: 8px;
+  }
+  // .ant-tag-checkable {
+  //   background-color: $green !important;
+  // }
+  // .ant-tag-checkable {
+  //   &:hover {
+  //     color: $middleGreen !important;
+  //   }
+  //   &:active {
+  //     background-color: $green !important;
+  //     color: white !important;
+  //   }
+ 
+  // }
+  // .ant-tag-checkable-checked {
+  //   background-color: $middleGreen !important;
+  //   &:hover {
+  //     color: white !important;
+  //   }
+  // }
+  .ant-tag {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+  }
+}

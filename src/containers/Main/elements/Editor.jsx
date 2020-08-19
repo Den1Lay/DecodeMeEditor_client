@@ -33,6 +33,7 @@ const Editor = (
     changeMaster, 
     illustrations,
     accessed,
+    superAccessed,
     wayObj,
     ways,
     setIllustrations, 
@@ -232,18 +233,18 @@ useEffect(() => {
             
           </div>
           <div className='editor__left_label'>
-            <Input disabled={!accessed} value={label} placeholder='Label' changeHandler={(ev) => {ev.persist(); setData({...data, label: ev.target.value}); eventHandl()}} />
+            <Input readOnly={!accessed} value={label} placeholder='Label' changeHandler={(ev) => {ev.persist(); setData({...data, label: ev.target.value}); eventHandl()}} />
           </div>
         </div>
         <div className='editor__left_dialog'>
-          <Mentions disabled={!accessed} value={mainPart} row={10} placeholder='Main part' changeHandler={ev => {setData({...data, mainPart: ev}); eventHandl()}}/>
+          <Mentions readOnly={!accessed} value={mainPart} row={10} placeholder='Main part' changeHandler={ev => {setData({...data, mainPart: ev}); eventHandl()}}/>
         </div>
         <div className='editor__left_comment'>
-          <Mentions disabled={!accessed} value={comment} row={6} placeholder='Comment/analysis' changeHandler={ev => {setData({...data, comment: ev}); eventHandl()}}/>
+          <Mentions readOnly={!accessed} value={comment} row={6} placeholder='Comment/analysis' changeHandler={ev => {setData({...data, comment: ev}); eventHandl()}}/>
         </div>
         <div className={classNames('editor__left_tabs','editor__left_tabs'+ (selectedType === '1' ? '-show' : '-hide'))}>
           <Answers 
-            disabled={!accessed}
+            readOnly={!accessed}
             setAnswers={({activeKey, panes: answers}) => {setData({...data, answers, activeKey}); eventHandl()}} 
             setActiveKey={({activeKey}) => setData({...data, activeKey})}  
             value={{panes: answers, activeKey}}/>
@@ -261,7 +262,7 @@ useEffect(() => {
               {`M: ${master}`}
             </div>
             <div className='editor__right_master_btn'>
-              <Button clickHandler={masterHandl}>
+              <Button disabled={!superAccessed} clickHandler={masterHandl}>
                 {noMaster 
                 ? "Stay master" 
                 : master === nickName 
@@ -281,12 +282,12 @@ useEffect(() => {
         </div>
         <div className='editor__right_dialog'>
           <ArtPart 
-            disabled={!accessed} 
+            readOnly={!accessed} 
             artSrc={artSrc}
             value={artsDesription} 
             row={10} 
             mentionsHandler={ev => {setData({...data, artsDesription: ev}); eventHandl()}}
-            fileHandler={fileHandler}
+            fileHandler={(ev) => {fileHandler(ev); eventHandl()}}
             illustrations={illustrations}
             unsetIllust={setIllust}
             setIllust={setIllust}
@@ -296,10 +297,10 @@ useEffect(() => {
         </div>
         <div className='editor__right_branchDir'>
           <Directions 
-            disabled={!accessed} 
+            readOnly={!accessed} 
             row={7}
             wayHandler={() => ({})}
-            branchHandler={ev => { setData({...data, wayDirection: ev}); eventHandl();}}
+            branchHandler={ev => {setData({...data, branchDirection: ev}); eventHandl();}}
             wayDirection={cWayDirection}
             branchDirection={branchDirection}/>
           {/* <Mentions 
@@ -309,7 +310,7 @@ useEffect(() => {
             changeHandler={ev => {; eventHandl()}}/> */}
         </div>
         <div className={classNames('editor__right_metaData', 'editor__right_metaData'+(selectedType === '1' ? '-show' : '-hide'))}>
-          <Mentions disabled={true} row={6} placeholder={"Meta data"}/>
+          <Mentions disabled={true} row={6} placeholder={"Meta data (SOON)"}/>
         </div>
       </div>
     </>
@@ -326,24 +327,34 @@ export default connect(({main: {workBranch, workPCD, projects, personObj, workPe
   let versionInd = [];
   let master = null;
   let wayObj = null; // EXP режим, исправить на '';
+  let accessed = false;
+  let superAccessed = false;
+  const nickName = personObj.userData.nickName;
   if(workPCD !== null) {
     // в мастере будет никнейм 
     mineInd(projects, workPCD.projectId, 'superId', projectInd);    
     mineInd(projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
-    master = projects[projectInd[0]].versions[versionInd[0]].master
+    master = projects[projectInd[0]].versions[versionInd[0]].master;
+
+  
+    
+    const targetAccess = projects[projectInd[0]].superAccess;
+    superAccessed = targetAccess.includes(personObj.userData.superId) || targetAccess.includes('all')
+
+    if(superAccessed) {
+      if(master === null || master === nickName) {
+        accessed = true;
+      }
+    }
   };
 
-  const nickName = personObj.userData.nickName;
+
   //let wayInd = [];
   //mineInd(projects[projectInd[0]].versions[versionInd[0]].ways, workBranch.wayId, 'wayId', wayInd);
   //wayObj = projects[projectInd[0]].versions[versionInd[0]].ways[wayInd[0]];
   // я не должен думать, есть ли здесь эти данные.... 
-  let accessed = false;
-  if(projects[projectInd[0]].superAccess.includes(personObj.userData.superId)) {
-    if(master === null || master === nickName) {
-      accessed = true;
-    }
-  }
+  
+  
   return {
     master,
     illustrations:workPCD ? projects[projectInd[0]].versions[versionInd[0]].illustrations : [],
@@ -354,6 +365,7 @@ export default connect(({main: {workBranch, workPCD, projects, personObj, workPe
     person: workPerson,
     workPCD,
     accessed,
+    superAccessed,
     //ways: projects[projectInd[0]].versions[versionInd[0]].ways[wayInd[0]],
     paths:workPCD ? projects[projectInd[0]].versions[versionInd[0]].paths : [],
     currentHeight: workPCD ? workPCD[workPCD.workVersion].height : null, // обертка для поддержания первичной логики

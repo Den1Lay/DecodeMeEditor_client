@@ -9,6 +9,7 @@ import {
 
 import {Button} from '@/components'
 import {Editor, Project, Version, Social} from './elements'
+import Profile from './Profile'
 
 import {openPlace} from '@/actions'
 
@@ -77,6 +78,13 @@ const Main = ({mainPlace, openPlace}) => {
               Project, version or pod was deleted, rechoose project.
             </div>
           )
+        break
+        case 'profile': 
+        newPayload = (
+          <div className='profile'>
+            <Profile />
+          </div>
+        )
         break
         default:
 

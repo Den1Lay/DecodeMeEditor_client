@@ -133,7 +133,7 @@ store.subscribe(() => {
   //     store.dispatch(updateUsers(users));
   //   })
   // }
-  if(lastV !== freshState.main.workBranch.v) {
+  if(freshState.main.workBranch && (lastV !== freshState.main.workBranch.v)) {
     console.log('%c%s', 'color: royalblue; font-size: 22px;', "DEBUG_STATE: ", freshState);
     let {main:{projectsCoordsData: pcd, workBranch: {v}, workPerson: person, workPCD, projects, personObj, availablePayload: avPayload}} = freshState
     let token = localStorage.token;

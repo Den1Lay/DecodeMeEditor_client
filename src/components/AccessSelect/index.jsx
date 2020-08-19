@@ -6,7 +6,7 @@ import { Select } from 'antd';
 import './Select.scss';
 
 const {Option} = Select;
-const SelectBase = ({changeHandler, isCreate, isSuper, projects, friends, workPCD, superId, nickName}) => { //defData, options}) => { //, options
+const SelectBase = ({changeHandler, isCreate, isSuper, projects, friends, workPCD, superId, nickName, disabled}) => { //defData, options}) => { //, options
   debugger
   console.log("SELECT_IS_READY");
   //уметь забивать на структурные баги чужого кода надо уметь.
@@ -84,6 +84,7 @@ const SelectBase = ({changeHandler, isCreate, isSuper, projects, friends, workPC
   // ребилд 
   return (
     <Select
+      disabled={disabled}
       mode="multiple"
       style={{ width: '100%' }}
       placeholder="Please select"

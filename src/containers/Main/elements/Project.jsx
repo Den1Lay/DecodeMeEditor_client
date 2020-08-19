@@ -21,6 +21,7 @@ const Project = (
     setupProject,
     workPerson,
     versionComment,
+    isOwner,
     saveVersion
   }) => {
 debugger
@@ -75,9 +76,6 @@ const [versionData, setVersionData] = useState({comment: ''})
     })
   }
 
-  function sumbitHandl() {
-    
-  }
   // ПОвторяющиеся никнеймы локаются.
   function getSuperId(nicks) {
     let superIdArr = [];
@@ -101,6 +99,7 @@ const [versionData, setVersionData] = useState({comment: ''})
   }
 
   function deleteHandler(target) {
+    
     socket.emit('DELETE', {token: localStorage.token, workPCD, workPerson, target});
   };
   
@@ -110,29 +109,27 @@ const [versionData, setVersionData] = useState({comment: ''})
     setVersionData({comment: ev.target.value})
   }
 
-  // let defData = selectData.access.slice()
-  //   .map(({superId, nickName}) => projectData.access.includes(superId) ? nickName : null);
-  // let options = selectData.access.map(({nickName, disabled}) => ({value: nickName, disabled}));
   return (
     <>
       <div className='project__upPart'>
         <div className='project__upPart_input'>
-          <Input placeholder='name' changeHandler={nameHandl} value={projectData.name}/>
+          <Input readOnly={!isOwner} placeholder='name' changeHandler={nameHandl} value={projectData.name}/>
         </div>
         <div className='project__upPart_space' />
         <div className='project__upPart_createBtn'>
-          <Button clickHandler={createOrSaveHandler}>
+          <Button disabled={!isOwner} clickHandler={createOrSaveHandler}>
             {isSetup ? "SAVE PROJECT" : "CREATE"}
           </Button>
         </div>
       </div>
       <div className='project__bottomPart'>
         <div className='project__bottomPart_description'>
-          <Mentions value={projectData.description} row={2} placeholder='description' changeHandler={descriptionHandl}/>
+          <Mentions readOnly={!isOwner} value={projectData.description} row={2} placeholder='description' changeHandler={descriptionHandl}/>
         </div>
         <div className='project__bottomPart_access'>
           <p>Юзеры, которые могут просматривать проект:</p>
           <AccessSelect 
+              disabled={!isOwner}
               isCreate={isSetup === false}
               isSuper={false}
               changeHandler={(nickNames) => setProjectData({...projectData, access: [projectData.access[0]].concat(getSuperId(nickNames))}) } 
@@ -141,16 +138,17 @@ const [versionData, setVersionData] = useState({comment: ''})
         <div className='project__bottomPart_access'>
           <p>Юзеры, которые могут создавать новые версии и редактировать другие, при возможности:</p>
           <AccessSelect 
+              disabled={!isOwner}
               isCreate={isSetup === false}
               isSuper={true}
               changeHandler={(nickNames) => setProjectData({...projectData, superAccess: [projectData.superAccess[0]].concat(getSuperId(nickNames))})} 
             />
         </div>
         {
-          isSetup && <div className='project__bottomPart_delete'>
+          isSetup && isOwner && <div className='project__bottomPart_delete'>
             <div className='project__bottomPart_delete_space'></div>
             <div className='project__bottomPart_delete_btn'>
-              <Button clickHandler={() => deleteHandler('project')}><DeleteOutlined/> DELETE PROJECT</Button>
+              <Button  clickHandler={() => deleteHandler('project')}><DeleteOutlined/> DELETE PROJECT</Button>
             </div>
           </div>
         }
@@ -167,13 +165,17 @@ const [versionData, setVersionData] = useState({comment: ''})
                 <Button clickHandler={saveVersion}>SAVE VERSION</Button>
               </div>
             </div>
-            <div className='project__versionPart_bottom'>
-              <div className='project__versionPart_bottom_space'>
+            {
+              isOwner && 
+              <div className='project__versionPart_bottom'>
+                <div className='project__versionPart_bottom_space'>
+                </div>
+                <div className='project__versionPart_bottom_deleteBtn'>
+                  <Button clickHandler={() => deleteHandler('version')}><DeleteOutlined/> DELETE VERSION </Button>
+                </div>
               </div>
-              <div className='project__versionPart_bottom_deleteBtn'>
-                <Button clickHandler={() => deleteHandler('version')}><DeleteOutlined/> DELETE VERSION </Button>
-              </div>
-            </div>
+            }
+            
           </div>
         }
       </div>
@@ -201,11 +203,21 @@ export default connect(({main: {
       };
       if(isSetup && workPCD) {
         let projectInd = [];
-        mineInd(projects, workPCD.projectId, 'superId', projectInd);
         let versionInd = [];
+        mineInd(projects, workPCD.projectId, 'superId', projectInd);
         mineInd(projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
+
+        // const targetAccess = projects[projectInd[0]].superAccess;
+        // if(targetAccess.includes(personObj.userData.superId) || targetAccess.includes('all')) {
+        //   if(master === null || master === nickName) {
+        //     accessed = true;
+        //   }
+        // }
+
         res.versionComment = projects[projectInd[0]].versions[versionInd[0]].comment;
+        
       };
+      res.isOwner = workPerson === personSId;
       return res
       
     }, {addProject, setupProject, saveVersion})(Project)

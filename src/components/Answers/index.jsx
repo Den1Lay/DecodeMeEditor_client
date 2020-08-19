@@ -94,7 +94,7 @@ const { TabPane } = Tabs;
 
 // Проблема решается через абсолютное отключение от едитора и работой напрямую с ворк бренчем
 // Так же в эдиторе все данные будут динамически редактировать ВБ
-const Answers = ({value, setAnswers, setActiveKey}) => {
+const Answers = ({value, setAnswers, setActiveKey, readOnly}) => {
   // const [tabsData, setTabsData] = useState({
   //   activeKey: '0',
   //   panes: [
@@ -190,7 +190,7 @@ const Answers = ({value, setAnswers, setActiveKey}) => {
   debugger
   return (
     <Tabs
-      type="editable-card"
+      type={readOnly ? 'card' : "editable-card"}
       onChange={changeHandl}
       activeKey={activeKey}
       onEdit={editHandl}
@@ -202,9 +202,20 @@ const Answers = ({value, setAnswers, setActiveKey}) => {
           key={pane.key} 
           closable={activeKey === i+'' && pane.closable}>
           {<div style={{margin: "1px"}}>
-            <Mentions row={3} placeholder={'Answer..'} value={pane.content} changeHandler={questionChangeHandl}/>
+            <Mentions 
+              readOnly={readOnly} 
+              row={3} 
+              placeholder={'Answer..'} 
+              value={pane.content} 
+              changeHandler={questionChangeHandl}
+              />
             <div className='refToPod'>
-              <Input value={pane.ref} placeholder="Ref" changeHandler={refChangeHandl} /> 
+              <Input 
+                readOnly={readOnly} 
+                value={pane.ref} 
+                placeholder="Ref" 
+                changeHandler={refChangeHandl} 
+                /> 
             </div>
             </div>}
         </TabPane>

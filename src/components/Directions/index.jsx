@@ -1,41 +1,37 @@
 import React, {useState} from 'react'
 
-import {Tag, Mentions} from 'antd'
+import {Mentions, CheckTags} from '@/components';
 
 import './Directions.scss';
 
-const { CheckableTag } = Tag
-
-const Directions = ({branchDirection, wayDirection, branchHandler, wayHandler, row}) => {
+const Directions = ({branchDirection, wayDirection, branchHandler, wayHandler, row, readOnly}) => {
   const [workPlace, setWorkPlace] = useState('branch')
 
   function changeHandler(ev) {
+    console.log('EV:', ev)
+
     workPlace === 'path'
     ? wayHandler(ev)
     : branchHandler(ev)
   } 
+  let checkTagsProps = {
+    firstVal: 'Branch',  
+    firstHandler: () => setWorkPlace('branch'), 
+    secondVal: 'Way', 
+    secondHandler:() => setWorkPlace('path'), 
+    checkData: workPlace === 'branch'
+  }
 
   return (
     <div className='directons'>
       <Mentions 
+          disabled={workPlace === 'path'}
+          readOnly={readOnly}
           value={workPlace === 'path' ? wayDirection : branchDirection}
-          rows={row}
-          placeholder={workPlace === 'path' ? "Path direction.." : "Branch dir.."}
+          row={row}
+          placeholder={workPlace === 'path' ? "Way (SOON)" : "Branch dir.."}
           changeHandler={changeHandler} />
-      <div className='directions__controllers'>
-        <CheckableTag
-          checked={workPlace === 'branch'}
-          onClick={() => workPlace !== 'branch' && setWorkPlace('branch')}
-        >
-          Branch
-        </CheckableTag>
-        <CheckableTag
-          checked={workPlace === 'path'}
-          onClick={() => workPlace !== 'path' && setWorkPlace('path')}
-        >
-          Way
-        </CheckableTag>
-      </div>
+        <CheckTags {...checkTagsProps} />
     </div>
   )
 }

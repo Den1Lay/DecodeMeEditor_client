@@ -12,3 +12,4 @@ export {default as BoxImage} from './BoxImage'
 export {default as ImageTooltip} from './ImageTooltip';
 export {default as Leaf} from './Leaf';
 export {default as Directions} from './Directions'
+export {default as CheckTags} from './CheckTags'

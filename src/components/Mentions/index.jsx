@@ -3,12 +3,13 @@ import {Mentions} from 'antd'
 
 import './Mentions.scss'
 
-const MentionsBase = ({row, placeholder='', changeHandler, value, disabled=false}) => {
+const MentionsBase = ({row, placeholder='', changeHandler, value, readOnly=false, disabled}) => {
   return (
     <Mentions 
-      readOnly={disabled}
+      disabled={disabled}
+      readOnly={readOnly}
       value={value}
-      onChange={changeHandler}
+      onChange={(ev) => {changeHandler(ev); console.log('WTF')}}
       rows={row}
       placeholder={placeholder}
       className='realMentions'

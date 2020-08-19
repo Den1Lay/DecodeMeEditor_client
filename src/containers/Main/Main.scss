@@ -209,6 +209,11 @@
       flex: 2
     }
   }
+  .profile {
+    position: absolute;
+    width: 100%;
+    display: flex;
+  }
   .beginner {
     position: absolute;
     text-transform: capitalize;

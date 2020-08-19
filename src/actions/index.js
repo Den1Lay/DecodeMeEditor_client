@@ -27,7 +27,9 @@ export {setMapData} from './main';
 export {deleteData} from './main';
 export {saveVersion} from './main';
 export {newFriendProject} from './main';
+export {logOut} from './main'
 
 export {fetchUserData} from './network'
 export {userLogin} from './network'
 export {autoLoginWithToken} from './network'
+export {createUser} from './network'

@@ -70,6 +70,9 @@ export const newFriendProject = payload => ({
   type: 'NEW_FRIEND_PROJECT',
   payload
 })
+export const logOut = () => ({
+  type: 'LOGOUT'
+})
 // export const openProjectSetup = () => ({
 //   type: 'OPEN_PROJECT_SETUP'
 // })

@@ -6,7 +6,7 @@ import {PlusOutlined, DeleteOutlined} from '@ant-design/icons'
 
 import './Pod.scss';
 
-const Pod = ({actived, label, height, onPlus, onDelete, onChoose, showDelete}) => {
+const Pod = ({actived, label, readOnly, height, onPlus, onDelete, onChoose, showDelete, onAction}) => {
   
   function deleteHandl(ev) {
     ev.stopPropagation()
@@ -19,14 +19,19 @@ const Pod = ({actived, label, height, onPlus, onDelete, onChoose, showDelete}) =
         <div className='pod__top_height'>
           {height}
         </div>
-        <div className='pod__top_btns'>
-          <div className={classNames('pod__top_btns_delete', showDelete ? 'pod__top_btns_delete-show' : 'pod__top_btns_delete-hide')} onClick={deleteHandl}>
-            <DeleteOutlined />
+        {
+          !readOnly && 
+          <div className='pod__top_btns'>
+            <div 
+              className={classNames('pod__top_btns_delete', showDelete ? 'pod__top_btns_delete-show' : 'pod__top_btns_delete-hide')} 
+              onClick={(ev) => {ev.stopPropagation(); deleteHandl(ev); onAction()}}>
+              <DeleteOutlined />
+            </div>
+            <div className='pod__top_btns_plus' onClick={(ev)=> {ev.stopPropagation();onPlus(height); onAction()}}>
+              <PlusOutlined />
+            </div>
           </div>
-          <div className='pod__top_btns_plus' onClick={(ev)=> {ev.stopPropagation();onPlus(height)}}>
-            <PlusOutlined />
-          </div>
-        </div>
+        }
       </div>
       <div className={classNames('pod__bottom',actived ? 'pod__bottom-actived' : 'pod__bottom-just')}>
         <Mentions value={label.slice(0, 45)} readOnly rows={2} />

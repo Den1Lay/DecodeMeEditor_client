@@ -4,24 +4,35 @@ import {connect} from 'react-redux'
 
 import {Pod, Button} from '@/components'
 
-import {addPod, deletePod, choosePod, changeBranch} from '@/actions'
+import {addPod, deletePod, choosePod, changeBranch, changeMaster} from '@/actions'
+import {mineInd} from '@/utils'
 
 import './Branch.scss'
 
-const Branch = ({workBranch, workPCD, v, addPod, deletePod, choosePod, currentHeight, changeBranch}) => {
-  debugger
-  // let currentHeight = null;
-  // if(workPCD) {
-  //   currentHeight = workPCD[workPCD.workVersion].height;
-  // }
-  console.log("BRANCH_V:",v)
+const Branch = (
+  {
+    workBranch, 
+    master,
+    workPCD, 
+    accessed, v, 
+    addPod, 
+    deletePod, 
+    choosePod, 
+    currentHeight, 
+    changeBranch, 
+    changeMaster
+  }) => {
+
   let resData = workBranch.branch.base
   ? (workBranch.branch.base)
   .concat(workBranch.branch.question ? [workBranch.branch.question] : []) //
   : [];
   // нужно организовать точечную модификацию по высоте и хранилище всех подов..
+
   let realResData = resData.map(({coord:{height}, label, main}) => {
     return <Pod 
+      onAction={podAction}
+      readOnly={!accessed} 
       actived={currentHeight==height} 
       label={label} 
       main={main} 
@@ -32,6 +43,10 @@ const Branch = ({workBranch, workPCD, v, addPod, deletePod, choosePod, currentHe
       showDelete={resData.length > 1}
       />
   })
+  const noMaster = master === null
+  function podAction() {
+    noMaster && changeMaster(true);
+  }
   //ebugger
   return(
     <div className='branchWrapper'>
@@ -58,9 +73,32 @@ const Branch = ({workBranch, workPCD, v, addPod, deletePod, choosePod, currentHe
   )
 }
 
-export default connect(({main: {workBranch, workPCD}})=>({
-  workBranch, 
-  v: workBranch.v, 
-  workPCD, 
-  currentHeight: workPCD ? workPCD[workPCD.workVersion].height: null
-}), {addPod, deletePod, choosePod, changeBranch})(Branch);
+export default connect(({main: {workBranch, workPCD, projects, personObj}}) => {
+  let accessed = false,
+  master = null;
+  const nickName = personObj.userData.nickName;
+  if(workPCD) {
+    let projectInd = [];
+    let versionInd = [];
+    
+    mineInd(projects, workPCD.projectId, 'superId', projectInd);   
+    mineInd(projects[projectInd[0]].versions, workPCD.workVersion, 'superId', versionInd);
+    master = projects[projectInd[0]].versions[versionInd[0]].master;
+
+    const targetAccess = projects[projectInd[0]].superAccess;
+    if(targetAccess.includes(personObj.userData.superId) || targetAccess.includes('all')) {
+      if(master === null || master === nickName) {
+        accessed = true;
+      }
+    }
+  }
+
+  return {
+    workBranch, 
+    v: workBranch.v, 
+    workPCD, 
+    master,
+    currentHeight: workPCD ? workPCD[workPCD.workVersion].height: null,
+    accessed
+  }
+}, {addPod, deletePod, choosePod, changeBranch, changeMaster})(Branch);

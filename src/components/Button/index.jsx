@@ -5,7 +5,15 @@ import {Button} from 'antd'
 
 import './Button.scss'
 
-const ButtonBase = ({children, place='main', clickHandler, isCircle, disabled=false}) => {
+const ButtonBase = (
+  {
+    children, 
+    place='main',
+     clickHandler, 
+     isCircle, 
+     disabled=false,
+     htmlType='button'
+    }) => {
 
   return(
     <Button 
@@ -13,6 +21,7 @@ const ButtonBase = ({children, place='main', clickHandler, isCircle, disabled=fa
         shape={isCircle ? "circle": null}
         onClick={clickHandler}
         type='primary' 
+        htmlType={htmlType}
         className={classNames('button', 'button__'+place)}>
         {children}
       </Button>
