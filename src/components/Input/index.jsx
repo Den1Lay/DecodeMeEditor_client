@@ -11,7 +11,7 @@ const InputBase = (
     width=100, 
     place='main', 
     placeholder, 
-    changeHandler, 
+    changeHandler=()=>{}, 
     value, 
     readOnly, 
     isPassword=false

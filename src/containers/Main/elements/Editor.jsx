@@ -13,7 +13,6 @@ import classNames from 'classnames'
 import {v4} from 'uuid'
 
 import {Mentions, Button, Input, Answers, ArtPart, Directions} from '@/components'
-import {Dropdown, Menu} from 'antd'
 import {mineInd} from '@/utils'
 
 import {savePod, changeBranch, changeMaster, setIllustrations} from '@/actions' 
@@ -34,11 +33,7 @@ const Editor = (
     illustrations,
     accessed,
     superAccessed,
-    wayObj,
-    ways,
-    setIllustrations, 
   }) => {
-    debugger
   // проверка на сохранение...
   const [selectedType, setSelectedType] = useState('0'); // 0: POD, 1: QUESTION
   const [data, setData] = useState({ // главное хранилище рабочих данных 
@@ -71,7 +66,7 @@ useEffect(() => {
     // выбор источника данных (вопрос или база) на основе данных PCD данных (чекни коннект)
     
     let dataSource = currentHeight !== 'question' ? workBranch.branch.base[currentHeight] : workBranch.branch.question;
-    debugger  
+
     const {label, main, comment, picture: {src, alt}} = dataSource;  
 
       // стандарный, пустой пак вопрос, который подставляется, если под не вопрос
@@ -153,7 +148,7 @@ useEffect(() => {
 
     // можно чекать те данные которые уже имеются, но тогда нужно интегрировать проверки.. 
     // которые улетят на ребилд с полным переосмыслением рабочего процесса и архитектуры.
-    debugger
+
     setSaveState(false);
     noMaster && changeMaster(true);
     cb && cb()
@@ -165,7 +160,6 @@ useEffect(() => {
     // и сохраняется на яндекс диске 
 
     ev.persist();
-    debugger
     let formData = new FormData();
     let workFile = ev.target.files[0];
     let dataType = workFile.name.substring(0).split('.');
@@ -326,7 +320,6 @@ export default connect(({main: {workBranch, workPCD, projects, personObj, workPe
   let projectInd = [];
   let versionInd = [];
   let master = null;
-  let wayObj = null; // EXP режим, исправить на '';
   let accessed = false;
   let superAccessed = false;
   const nickName = personObj.userData.nickName;

@@ -8,7 +8,6 @@ const Directions = ({branchDirection, wayDirection, branchHandler, wayHandler, r
   const [workPlace, setWorkPlace] = useState('branch')
 
   function changeHandler(ev) {
-    console.log('EV:', ev)
 
     workPlace === 'path'
     ? wayHandler(ev)

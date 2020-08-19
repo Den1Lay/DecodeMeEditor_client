@@ -35,7 +35,6 @@ const MapBase = ({workPCD, projects, mapStore, mapGrid, mapCurrent, setMapData, 
       // старого по выбранности элемента и нового ---> происходит модификация и ресборка МАПЫ. Привет шашки)
 
       worker.onmessage = function(ev) {
-        console.log("WD:", ev.data);
         
         let mapCurrent = workPos;
         let mapGrid = ev.data.grid.slice();
@@ -44,7 +43,6 @@ const MapBase = ({workPCD, projects, mapStore, mapGrid, mapCurrent, setMapData, 
             return <Leaf clickHandler={() => changeBranch(data.pos)} data={data} current={(data?.pos ?? null) === mapCurrent} />
           })
         });
-        debugger;
         console.timeEnd()
         setMapData({mapGrid, mapStore, mapCurrent})
         setMain(mapStore.map(line => (<div className='map__line'>{line}</div>)))

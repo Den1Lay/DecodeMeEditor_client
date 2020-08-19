@@ -3,8 +3,8 @@
 
 // БАГ. Не обновляется состояние выбранного проекта, после выброса. Лечится рестартом... Причина скорее
 // всего в том, что компоненты не до конца управляемы. Хранят старые состояния...
-import React, {useState, useEffect} from 'react'
-import {connect, batch} from 'react-redux'
+import React, {useState} from 'react'
+import {connect} from 'react-redux'
 import classNames from 'classnames'
 
 import {Input, Button} from '@/components'
@@ -31,9 +31,7 @@ debugger //changeMaster(false)
   //const [projectsDrop, setProjectsDrop] = useState(null)
   //const [checkData, setCheckData] = useState({cpId: null, cpL: null})
   //const [currentProject, setCurrentProject] = useState(null)
-  const [showProjects, setShowProjects] = useState(false);
-  
-  const [hideDls, setHideDls] = useState(true);
+
   // function projectsSubmitHandl(ev) {
   //   ev.persist()
   // }
@@ -64,7 +62,7 @@ debugger //changeMaster(false)
   //   console.log('Picked project ind: ', key)
   // }
 
-  debugger
+
   let projectInd = undefined;
   for(let i=0;i<projects.length;i++) {
     if(projects[i].superId === projectId) {
@@ -137,7 +135,9 @@ debugger //changeMaster(false)
             current: projectId,
             selectHandl: (ev) => {selectProject(ev.key); changeMaster(false)}})} 
           onVisibleChange={(ev) => console.log('OnVisibleChange', ev)}>
-          <div><Input place='navbar' placeholder={(projects.length && projectInd !== undefined) 
+          <div><Input  
+            place='navbar' 
+            placeholder={(projects.length && projectInd !== undefined) 
               ? projects[projectInd].name 
               : projects.length
                 ? "Choose some-thing"
@@ -183,7 +183,7 @@ debugger //changeMaster(false)
 }
 //
 export default connect(
-  ({main: {demo_projects, projects, workPCD, workBranch, personObj, workPerson}}) => {
+  ({main: { projects, workPCD, workBranch, personObj, workPerson}}) => {
     let superAccessed = false;
 
     const checkAccess = accesses => accesses.includes(personObj.userData.superId) || accesses.includes('all');

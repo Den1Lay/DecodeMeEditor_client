@@ -1,15 +1,12 @@
 import io from 'socket.io-client'
 import store from '@/store';
 import {
-  updateUsers, 
   updateApplicantList, 
   addFriend, 
   accessControl, 
   updateData, 
   newFriendProject,
-  deleteData,
-  setIllustrations,
-  setMaster} from '@/actions'
+ } from '@/actions'
 
 import {openNotification} from '@/utils'
 
@@ -20,26 +17,26 @@ const socket = io('http://localhost:4040', {
 
 socket
   .on('connect', () => {
-    console.log('%c%s', 'color: green; font-size: 23px', "REAL_SOCKET_CONNECT")
+    //console.log('%c%s', 'color: green; font-size: 23px', "REAL_SOCKET_CONNECT")
     //console.log(localStorage.token)
     //let realToken = localStorage.token;
     //realToken && socket.emit('JOIN', {token: realToken});
   })
   .on('FORB', () => {
-    console.log('%c%s', 'color: pink; font-size: 18px;', 'FORBIDDEN');
+    // console.log('%c%s', 'color: pink; font-size: 18px;', 'FORBIDDEN');
     delete localStorage.token
   })
   // РАБОТКА)))ы
   .on('FORBIDDEN', () => {
-    console.log('%c%s', 'color: darkred; font-size: 22px;', 'GET_FORBIDDEN')
+    //console.log('%c%s', 'color: darkred; font-size: 22px;', 'GET_FORBIDDEN')
   })
   .on('VERSION_UPDATE', (pass) => { // добавь фильтровалку по сендеру
     store.dispatch(updateData({data: pass, address:'versions'})) 
-    console.log('GG_WP')
-    console.log('%c%s','color: indigo; font-size: 22px;','VERSION_UPDATE_PASS: ', pass)
+    // console.log('GG_WP')
+    // console.log('%c%s','color: indigo; font-size: 22px;','VERSION_UPDATE_PASS: ', pass)
   })
   .on('NEW_VERSION', pass => {
-    console.log('%c%s', 'color: goldenrod; font-size: 22px;', 'NEW_VERSION_YOU_PROJECT', pass)
+    //console.log('%c%s', 'color: goldenrod; font-size: 22px;', 'NEW_VERSION_YOU_PROJECT', pass)
   })
   // ACCESS ZONE
   // существует критический баг, при изменении all доступа со стороны выбираемой персоны, во время пиков
@@ -64,17 +61,17 @@ socket
   })
   // FRIEND EVENTS ZONE
   .on('FRIEND_REQUEST', ({user}) => {
-    console.log('%c%s', 'color: aqua; font-size: 22px', 'FRIEND_REQUEST:', user)
+    //console.log('%c%s', 'color: aqua; font-size: 22px', 'FRIEND_REQUEST:', user)
     openNotification({type: 'info', message: 'New request to friend'})
     store.dispatch(updateApplicantList(user))
     // openNotification by antd 
   })
   .on('ACCEPT_REQUEST', ({user}) => { // like callback from click in social
-    console.log('%c%s', 'color: deeporange; font-size: 22px', 'ACCEPT_REQUEST:', user);
+    //console.log('%c%s', 'color: deeporange; font-size: 22px', 'ACCEPT_REQUEST:', user);
     store.dispatch(addFriend(user))
   })
   .on('NEW_FRIEND', ({user}) => { // response on click "ADD_TO_COMPADRE"
-    console.log('%c%s', 'color: navy; font-size: 22px', 'NEW_FRIEND:', user);
+    //console.log('%c%s', 'color: navy; font-size: 22px', 'NEW_FRIEND:', user);
     openNotification({type: 'success', message: 'Accept request', description: `New friend: ${user.userData.nickName}`})
     store.dispatch(addFriend(user));
     
@@ -82,13 +79,12 @@ socket
   .on('NEW_AVAILABLES', ({person, workPCD, payload: pass, sender}) => {
     // wtf а как фильтрить?
     // можно фильтрить по сэндеру === personObj.superId? ГО
-    debugger
     const {main: {personObj: {userData: {superId}}}} =  store.getState();
     superId !== sender && store.dispatch(updateData({data: {person, workPCD, pass}, address: 'available'}));
   })
   .on('NEW_ILLUSTRATIONS', ({person, workPCD, newIllust, action, sender}) => {
     // Эксперитентальный подход со съеданием сендер ивента в лайв режиме.
-    const {main: {personObj: {userData: {superId}}}} =  store.getState();
+    //const {main: {personObj: {userData: {superId}}}} =  store.getState();
     store.dispatch(updateData({data: { person, newIllust, action, workPCD}, address: 'illustrations'}))
   })
   .on('REQUEST_RIGHT', ({sender}) => {
@@ -105,12 +101,12 @@ socket
     })()
   })
   .on('NEW_FRIEND_PROJECT', ({project, sender}) => {
-    debugger
+
     const {main: {personObj: {userData: {superId}}}} = store.getState();
     superId !== sender && store.dispatch(newFriendProject({personId: sender, project}));
   })
   .on('NEW_FRIEND_VERSION', ({person, projectId, workVersion, sender}) => {
-    debugger
+
     const {main: {personObj: {userData: {superId}}}} = store.getState();
     superId !== sender && (() => {
       store.dispatch(updateData({data: {person, projectId, workVersion}, address: 'new_version'}));
@@ -134,12 +130,12 @@ store.subscribe(() => {
   //   })
   // }
   if(freshState.main.workBranch && (lastV !== freshState.main.workBranch.v)) {
-    console.log('%c%s', 'color: royalblue; font-size: 22px;', "DEBUG_STATE: ", freshState);
+    //console.log('%c%s', 'color: royalblue; font-size: 22px;', "DEBUG_STATE: ", freshState);
     let {main:{projectsCoordsData: pcd, workBranch: {v}, workPerson: person, workPCD, projects, personObj, availablePayload: avPayload}} = freshState
     let token = localStorage.token;
     let project = freshState.main.projects ? freshState.main.projects[0] : null;
     let myLastProject = personObj.userData.myLastProject;
-    debugger
+
     let checkSimbol = (v+'').substring(0, 1);
     switch(checkSimbol) {
       case "c": 
@@ -155,7 +151,7 @@ store.subscribe(() => {
       // exist project change handl
       socket.emit('UPDATE_PROJECTS', {
         token, pcd, workVersion: (() => {
-          debugger
+
           let {projects, workPCD: {projectId, workVersion}} = freshState.main;
 
           let projectInd;
@@ -257,7 +253,7 @@ store.subscribe(() => {
       break;
       default: 
       debugger
-      console.log('%c%s', 'color: red; font-size: 33px;', 'UNEXPECTED V:', v)
+      //console.log('%c%s', 'color: red; font-size: 33px;', 'UNEXPECTED V:', v)
       //err handl
     }
     lastV = v;

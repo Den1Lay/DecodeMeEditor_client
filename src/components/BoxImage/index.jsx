@@ -12,7 +12,6 @@ const BoxImage = ({artSrc, clickHandler=()=>{}}) => {
 
   useEffect(() => {
     // чисто памятник
-    debugger
     if(pictureRef.current) {
       if(workSrc !== artSrc) {
         setWorkSrc(artSrc);

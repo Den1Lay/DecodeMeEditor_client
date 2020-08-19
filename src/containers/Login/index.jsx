@@ -5,13 +5,12 @@ import classNames from 'classnames';
 import {fetchUserData, userLogin, autoLoginWithToken, createUser} from '@/actions'
 
 import {Button, CheckTags, Input} from '@/components';
-import {Form, message} from 'antd'
+import {message} from 'antd'
 
 import './Login.scss'
 
 const Login = ({fetchUserData, userLogin, autoLoginWithToken, createUser}) => {
   const login = useRef(null),
-  [showAchtung, setShowAchtung] = useState(true),
   [show, setShow] = useState(null),
   [workPlace, setWorkPlace] = useState('create'),
   [data, setData] = useState({nickName: '', password: '', secondPassword: ''}),

@@ -3,8 +3,7 @@ import {connect} from 'react-redux'
 import {socket} from '@/core'
 import {mineInd} from '@/utils'
 
-import {Mentions, Dropdown, Button, Input, AccessSelect} from '@/components'
-import {Select} from 'antd'
+import {Mentions, Button, Input, AccessSelect} from '@/components'
 import {DeleteOutlined} from '@ant-design/icons';
 
 import {addProject, setupProject, saveVersion} from '@/actions'
@@ -13,7 +12,6 @@ const Project = (
   {
     addProject, 
     friends, 
-    nickName, 
     personSId, 
     projects, 
     workPCD, 

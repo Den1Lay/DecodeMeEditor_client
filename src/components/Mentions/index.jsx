@@ -13,7 +13,6 @@ const MentionsBase = ({row, placeholder='', changeHandler, value, readOnly=false
       rows={row}
       placeholder={placeholder}
       className='realMentions'
-      //disabled={disabled}
       >
   </Mentions>
   )

@@ -15,7 +15,6 @@ const dataInit = payload => ({
 })
 
 export const fetchUserData = () => dispatch => {
-  debugger
   new Promise((resolve, reject) => {
     try {
      let objData = JSON.parse(data);
@@ -42,10 +41,8 @@ const effecter = ({status, token, data, msg}, isTokenLogin = false) => dispatch 
 }
 
 export const userLogin = (data) => dispatch => {
-  console.log("STAAART")
   auth.login(data)
     .then((reqData) => {
-      console.log('REQ_')
       effecter(reqData.data)(dispatch)
     })
     .catch((err) => {
@@ -54,20 +51,9 @@ export const userLogin = (data) => dispatch => {
 }
 
 export const createUser = data => dispatch => {
-  console.log('CREATE_ALIVE')
   auth.register(data)
     .then((reqData) => {
       effecter(reqData.data)(dispatch)
-      // const {status, token, data, msg} = reqData.data;
-
-      // if(status === 'success') {
-      //   openNotification({type: status, message: upFirstSimbol(status), description: msg})
-      //   localStorage.token = token;
-      //   socket.emit('JOIN', {token: localStorage.token});
-      //   dispatch(dataInit(data));
-      // } else {
-      //   openNotification({type: status, message: upFirstSimbol(status), description: msg})
-      // }
     })
     .catch(err => {
       console.log('%c%s', 'color: red; font-size: 25px;', "Error createUser: ", err)
@@ -78,16 +64,6 @@ export const autoLoginWithToken = () => dispatch => {
   auth.checkToken()
     .then((reqData) => {
       effecter(reqData.data, true)(dispatch)
-      // const {status, msg,  token, data} = reqData.data
-      // if(status === 'success') {
-      //   openNotification({type: status, message: upFirstSimbol(status), description: msg})
-      //   localStorage.token = token;
-      //   socket.emit('JOIN', {token: localStorage.token});
-      //   dispatch(dataInit(data));
-      // } else {
-      //   openNotification({type: status, message: upFirstSimbol(status), description: msg})
-      //   delete localStorage.token
-      // }
     })
     .catch((er) => {
       console.log('%c%s', 'color: red;font-size:33px;', 'AUTO_LOGIN_ERR:', er)

@@ -1,7 +1,7 @@
 import React, {useState}  from 'react'
 import {connect} from 'react-redux'
 
-import {Mentions, Dropdown, Button, Input} from '@/components'
+import {Button, Input} from '@/components'
 
 import {addVersion} from '@/actions'
 

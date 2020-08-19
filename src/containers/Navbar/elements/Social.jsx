@@ -7,6 +7,7 @@ import React from 'react'
 import {connect} from 'react-redux'
 import classNames from 'classnames'
 import {socket} from '@/core'
+import {openNotification} from '@/utils'
 
 import {Button} from '@/components'
 
@@ -30,7 +31,6 @@ const Navbar_Social = (
     if(workPerson !== mySuperId) {
       socket.emit('GET_USERS_DETAIL', {token: localStorage.token, personId: mySuperId});
       socket.on('NEW_USERS_DETAIL', ({user}) => {
-        console.log('HOME_USER:', user);
         if(user.userData.superId === mySuperId) { // возможно эта проверка не нужна
           chooseMe(user.projects)
         }
@@ -47,9 +47,15 @@ const Navbar_Social = (
       personId
     });
     socket.on('NEW_SUBSCRIBE_USER', ({friendObj}) => {
-      changeMaster(false);
-      updateData({data: friendObj, address: 'friend'});
-      choosePerson(personId);
+      const me = personObj.userData.superId;
+      if(friendObj.projects.some(({access}) => access.includes(me) || access.includes('all'))) {
+        changeMaster(false);
+        updateData({data: friendObj, address: 'friend'});
+        choosePerson(personId);
+      } else {
+        openNotification({type: 'error', message: 'Error', description:"Friend don't provide accesses"})
+      }
+      
     })
   }
 
@@ -64,7 +70,7 @@ const Navbar_Social = (
         {
           friends.length
           ? <div className='friendsList'> 
-            {friends.slice(0, 6).map((friend) => { /// WTF Если сюда поставить splice то он модифнет state.main. Ору
+            {friends.slice(0, 2).map((friend) => { /// WTF Если сюда поставить splice то он модифнет state.main. Ору
               debugger
               return <div onClick={() => chooseFriendHandler(friend.userData.superId)}>
                 {avatarComp(friend, friend.userData.nickName.substring(0, 2))}

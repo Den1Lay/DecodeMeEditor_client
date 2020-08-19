@@ -17,14 +17,14 @@ const Navbar = () => {
 }
 
 const mapState = state => {
-  console.log("STATE:", state)
+
 return {
   state
 }
 },
 
 mapDispatch = dispatch => {
-  console.log("DISPATCH", dispatch)
+
   return {
 
   }

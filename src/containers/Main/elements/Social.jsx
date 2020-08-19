@@ -3,7 +3,7 @@ import {connect} from 'react-redux'
 import {socket} from '@/core'
 import store from '@/store'
 
-import {Input, Button, AddToCompadre} from '@/components';
+import {Button, AddToCompadre} from '@/components';
 import {Select} from 'antd'
 import {openNotification, mineInd} from '@/utils'
 
@@ -20,9 +20,6 @@ const Social = (
     cleanApplicantList, 
     updateData, 
     changeMaster,
-    workPerson, 
-    previewPerson, 
-    updateUsers
   }) => {
   // возможность работать с челом в зависимости от доступов с его стороны...
   const [person, setPerson] = useState(null);
@@ -40,7 +37,6 @@ const Social = (
     if(person && !isFriend && (!personDetail || (personDetail.userData.superId !== person.superId))) {
       socket.emit('GET_USERS_DETAIL', {token: localStorage.token, personId: person.superId});
       socket.on('NEW_USERS_DETAIL', ({user}) => {
-        console.log("MAIN_SOCIAL_EVENT")
         setPersonDetail(user)
       })
     } else if(person && (!personDetail || (personDetail.userData.superId !== person.superId))) {
@@ -56,7 +52,6 @@ const Social = (
     if(applicantList.length !== newComrade.length) {
       socket.emit('GET_COMRADE_DETAIL', {token: localStorage.token});
       socket.on('NEW_COMRADE_DETAIL', ({comrades}) => {
-        console.log(`ALlenght: ${applicantList.length} newComrade.length: ${newComrade.length}`)
         setNewComrade(comrades)
       })
     };

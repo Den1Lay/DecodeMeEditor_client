@@ -1,9 +1,7 @@
 // докинь нормальных анимация перехода с логина на рп
-import React, { useState, useEffect, Suspense }  from 'react'
+import React from 'react'
 import {connect} from 'react-redux'
-import {socket} from '@/core';
 
-import {Button} from '@/components'
 import {Branch, Notes, Navbar, Map, Main, Login} from '@/containers' //Login as DefLogin
 
 import './Base.scss';
@@ -11,7 +9,7 @@ import './Base.scss';
 //const Login = React.lazy(() => import('@/containers/Login'));
 const Base = ({projects, mainPlace}) => {
    //const [login, setLogin] = useState({setted: false, payload: null});
-   const [showLazy, setShowLazy] = useState(false);
+   //const [showLazy, setShowLazy] = useState(false);
   // console.log('DEBUG', projects) //<Login />
   // const isMobile = /Mobile|webOS|BlackBerry|IEMobile|MeeGo|mini|Fennec|Windows Phone|Android|iP(ad|od|hone)/i.test(navigator.userAgent);
   
@@ -53,7 +51,7 @@ const Base = ({projects, mainPlace}) => {
                   mainPlace === 'map'
                   ? <Map />
                   : <>
-                      <Suspense fallback={null}><Main /></Suspense>
+                      <Main />
                       <Notes />
                     </>
                 }

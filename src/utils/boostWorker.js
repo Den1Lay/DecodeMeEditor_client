@@ -9,10 +9,10 @@
 export default function () {
   this.addEventListener("message", function(ev) {
     if(!ev) return;
-    debugger
+
     class TreeRecer {
       constructor(data) {
-        console.log("INSIDE:",data)
+        //console.log("INSIDE:",data)
         this.superData = data; // источник даты, которые модифится, 
         this.boost = 0;
         this.maxPath = '';
@@ -77,7 +77,7 @@ export default function () {
         this.checker(false, true).then(() => {
           // создание сетки на основе предельных данных this.boost (высота) и this.maxPath (ширина)
           this.grid = Array(this.boost).fill('').map(() => []).map(() => Array(this.maxPath.length).fill('').map(() => ({data: null})));
-          debugger
+
           this.checker(true, false).then(() => {
             this.grid = this.grid.reverse();
 

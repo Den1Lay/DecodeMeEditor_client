@@ -34,16 +34,16 @@ const Leaf = ({data, current, clickHandler}) => {
     }
     {
       data ?
-      <Tooltip placement="bottom" title={`${data.branch.branchDirection} dir`}>
+      <Tooltip placement="bottom" title={`${data.branch.branchDirection}`}>
         <div onClick={clickHandler}  className={classNames('leaf__main', current && 'leaf__main-current')}>
         {data && getConnects()}
         <div className='leaf__main_pods'>
           {data.branch.base.length}
         </div>
         {data.branch.question && 
-          <Tooltip title={`${data.branch.question.main} Q`}><div className={classNames('leaf__boll', 'leaf__boll-right')}></div></Tooltip>}
+          <Tooltip title={`${data.branch.question.main}`}><div className={classNames('leaf__boll', 'leaf__boll-right')}></div></Tooltip>}
         {data.hasOwnProperty('ans') &&
-           <Tooltip title={`${data.ans} ANS`}  ><div className={classNames('leaf__boll', 'leaf__boll-left')}></div></Tooltip>}
+           <Tooltip title={`${data.ans}`}  ><div className={classNames('leaf__boll', 'leaf__boll-left')}></div></Tooltip>}
       </div>
       </Tooltip> 
       : null

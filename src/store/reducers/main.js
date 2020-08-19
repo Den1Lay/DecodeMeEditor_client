@@ -18,7 +18,7 @@
 // производят обратный вызов, которые отлавливаются всеми кто в комнате. (нами тоже(филтрятся через sender))
 // 
 
-import {format, startOfWeek} from 'date-fns';
+import {format} from 'date-fns';
 import {v4} from 'uuid'
 import FastClone from 'fastest-clone'
 import {mineInd, openNotification} from '@/utils'
@@ -93,12 +93,12 @@ const defState = {
 let date = format(new Date(), "yyyy-MM-dd"); 
 export default (state = defState, action) => {
   const {type, payload, random} = action;
-  function updatPersonObj() {
-    if(state.workPerson === state.personObj.userData.superId) {
-      state.personObj.projects = state.projects;
-      state.personObj.projectsCoordsData = state.projectsCoordsData;
-    }
-  }
+  // function updatPersonObj() {
+  //   if(state.workPerson === state.personObj.userData.superId) {
+  //     state.personObj.projects = state.projects;
+  //     state.personObj.projectsCoordsData = state.projectsCoordsData;
+  //   }
+  // }
   // Псевдо мидл
   if(type !== 'CHANGE_BRANCH') { // DESTROY DIRTY MAP FIELDS, BECAUSE WE NEED FRESH
     /// сделать сравние более лояльным может даже функцию с свичем замутить.
@@ -122,7 +122,13 @@ export default (state = defState, action) => {
 
   function returnError () {
     state.workBranch = {};
-    state.workPCD = null;
+    state.workPCD = null; //При нулеке появляется баг с обновлением даты, о того юзера, 
+    // который кикнул
+    // c друго стороны есть праверка на PCD много где.
+    // Окей, предположим, что новых показателем качества рабочего процесса будет 
+    // существование workBranch.branch.base
+    // на ребилде разделить перменные на те, что отвечате за редер и те, что отвечают 
+    // за работу с данными.
     state.workBranch.branch = {};
     state.mainPlace = 'error';
     state.workBranch.v = random;
@@ -155,7 +161,7 @@ export default (state = defState, action) => {
     //disavaible middleware модификация pcd..
 
       return (() => {
-        debugger
+
         const wayId = v4(),
         versionId = 'v'+v4(),
         projectId = 'p'+v4(),
@@ -218,9 +224,8 @@ export default (state = defState, action) => {
           }
       })();
     case 'SETUP_PROJECT':
-      debugger
+      
       return (() => {
-        console.log(payload)
         const {name, description, access, superAccess} = payload
 
         let projectInd;
@@ -286,7 +291,7 @@ export default (state = defState, action) => {
       }
     case 'CLEAN_APPLICANT_LIST':
       return (() => {
-        debugger
+      
         //payload = superId;
         state.personObj.userData.applicantList = state.personObj.userData.applicantList.filter(({superId}) => superId !== payload)
         console.log(state.personObj.userData.applicantList);
@@ -302,7 +307,7 @@ export default (state = defState, action) => {
       })()
     case 'UPDATE_DATA': 
       // {payload, address, dlsInfo} = payload
-      debugger
+ 
       // ВСЕ ЭТИ ВЕЩИ МОГУТ ОТРАБОТАТЬ ПРИ КОМНАТЕ ВЫБОРА... 
       // Я НЕ ОБНОВЛЯЮ этот стафф. просто произвожу повторный запрос, если есть Подтверждающий клик.    
       // прослушка своего объекта не прекращается!!! --> проводишь обновления
@@ -347,7 +352,7 @@ export default (state = defState, action) => {
 
               // нужно чекать есть что рендерить, или нужно дропать ошибку тут.
 
-              let {person, projectId, versionId, workVersion} = data
+              let {person, projectId, versionId, workVersion} = data;
               // Если ты находишь в другом проекте или версии...
               // update version;
               let projectInd = [];
@@ -376,10 +381,13 @@ export default (state = defState, action) => {
               mineInd(state.projectsCoordsData, state.workPCD.projectId, 'proojectId', pcdInd);
               
               if(state.workBranch !== 'None') {
-                debugger
+           
                 localStorage.updateWithDeleteWorkDirFlag = 'false'
                 checkBottomData(() => {localStorage.updateWithDeleteWorkDirFlag = 'true'}); //SUCCESS MOVE not fail
-                debugger
+
+                // с такой явной анигирующей логикой нужно слушать проекты, а не юзера
+                // а еще нужно разделить обязанности рабочих групп. из за этого система не гибкая
+
                 if(localStorage.updateWithDeleteWorkDirFlag !== 'true') {
                   state.projectsCoordsData.splice(pcdInd[0], 1);
                   state.lastProject = null;
@@ -398,7 +406,7 @@ export default (state = defState, action) => {
           case 'available': 
           connected && (() => {
             // ПРодумай как фильтрить это..
-            let {person, workPCD, pass} = data; // Хаю хай тут баг, кста, когда чел будет в комнате выбора, 
+            let {workPCD, pass} = data; // Хаю хай тут баг, кста, когда чел будет в комнате выбора, 
             // он может получить этот вызов и ничего не обновить... Безотказная система падет.
             // можно обходить это простой проверкой на рабочего чела, который добывается в персоне сверху
             let projectInd = [];
@@ -449,7 +457,6 @@ export default (state = defState, action) => {
               state.projectsCoordsData.splice(PCDInd[0], 1);
 
             } else {
-              debugger
               // в будущем отловить исключение и сделать подхват существующих версий. 
               // А если удаляется последняяя версия, то удаляется проект. Это чекается в рекдакторе версии
               // проще всего полностью снести PCD. потом просто репикнуть. С мапой это на изи делается.
@@ -480,7 +487,6 @@ export default (state = defState, action) => {
     case 'ACCESS_CONTROL': 
       //{event, pass} = payload
       //{projectId, superId} = pass 
-      debugger
       return (() => {
         const {event, pass: {projectId, superId, all}} = payload;  // superId отправителя.
         // all - false, asBase 
@@ -520,7 +526,17 @@ export default (state = defState, action) => {
             openNotification({type: 'warning', message: "Lose access", description: `From ${payload.pass.nickName}`})
           }
           if(state.workPerson === superId) {
-
+            // нужно убивать PCD и выдываать ошибку, если чел state.workPCD.projectId === projectId
+            // Все подъемы не видят access пробемы. Значит нужно расправляется с PCD здесь
+            if(state.workPCD.projectId === projectId) {
+              let pcdInd = [];
+              mineInd(state.projectsCoordsData, projectId, 'projectId', pcdInd);
+              state.projectsCoordsData.splice(pcdInd[0], 1);
+              returnError();
+              
+              state.workBranch.v = 'c'+random;
+            }
+            
           }
           break
 
@@ -534,6 +550,7 @@ export default (state = defState, action) => {
           } 
           if(state.workPerson === superId) {
             // принять меры которые вводят ограничения на редактирование, если 
+            // меры применяется автоматически, на основе встроенных фильтров superAccess
           }
           
           break
@@ -554,7 +571,6 @@ export default (state = defState, action) => {
         return state;
       })()
     case 'CHANGE_MASTER':
-      debugger
       return state.workPCD
       ? (() => {
         let projectInd = [];
@@ -583,7 +599,7 @@ export default (state = defState, action) => {
 
     case 'SET_ILLUSTRATIONS':  // этот элемент вызывается юзером на прямую.
       return (() => {
-        const {newIllustration, action, sender, projectId} = payload;
+        const {newIllustration, action} = payload;
         let projectInd = [];
         mineInd(state.projects, state.workPCD.projectId, 'superId', projectInd);
 
@@ -685,11 +701,10 @@ export default (state = defState, action) => {
         return state
       })()
     case 'SAVE_POD': //wb.v
-    debugger
+
     return (() => {
       // Доделать этот компонент.
       // Интегрировать новую дату: PathDirection на уровне версии, потом пройтись по всему и прокомментить
-      console.log('PAYLOD:', payload);
       const {data: {label, mainPart, comment, artsDesription, branchDirection, wayDirection, answers, artSrc}, selectedType} = payload;
       
       let realWorkBranch = state.workBranch.branch;
@@ -726,7 +741,6 @@ export default (state = defState, action) => {
       // state.projects[projectInd[0]].versions[versionInd[0]].ways[etalonWayInd[0]].wayDirection = wayDirection;
 
       const updateAnswers = () => {
-        debugger
         answers.forEach(({content, key, ref}) => { // wayColor, wayId
           console.log(typeof key);
 
@@ -805,7 +819,6 @@ export default (state = defState, action) => {
         updateAnswers()
       } else if(selectedType === "1" && currentHeight !== 'question') {
         updateAnswers()
-        debugger
         if(currentHeight < (realWorkBranch.base.length-1)) {
           // Добавить уведомления о том, что поды были перемещены по нулевому ответу
           let zeroBase = realWorkBranch.base.splice(currentHeight+1);
@@ -884,7 +897,7 @@ export default (state = defState, action) => {
         }
 
       } else if(typeof payload === 'string') { // Event from map
-        debugger
+
         state.workBranch = state.projects[projectInd[0]].versions[versionInd[0]].data;
         state.workPCD[state.workPCD.workVersion].path = payload;
         state.workPCD[state.workPCD.workVersion].height = "question";
@@ -895,7 +908,7 @@ export default (state = defState, action) => {
           state.workPCD[state.workPCD.workVersion].height = '0'
         }
       } else {
-        debugger
+
         state.workBranch = state.workBranch.branch['q'+payload];
         state.workPCD[state.workPCD.workVersion].path = state.workPCD[state.workPCD.workVersion].path+payload;
         state.workPCD[state.workPCD.workVersion].height = "question";
@@ -997,8 +1010,6 @@ export default (state = defState, action) => {
       }
     })()
     case 'SELECT_PROJECT': 
-    console.log(payload) // projectId
-    debugger
     return (() => {
 
       // Это не просто точка входа в проект, это МЕД БРИГАДА, которая уничтожает вредоносный PCD и делает новый, причем 
@@ -1075,12 +1086,12 @@ export default (state = defState, action) => {
 
       let path = state.workPCD[state.workPCD.workVersion].path.substring(1)
       pathReducer(path, state);
-      debugger
+
       if(state.workBranch !== 'None') {
-        debugger
+
         localStorage.chooseProjectFlag = 'false'
         checkBottomData(() => {localStorage.chooseProjectFlag = 'true'});
-        debugger
+
         if(localStorage.chooseProjectFlag !== 'true') {
           state.projectsCoordsData.splice(PCDInd[0], 1);
           restartData();
@@ -1103,7 +1114,7 @@ export default (state = defState, action) => {
       }
     })()
     case 'SELECT_VERSION': 
-    debugger
+
     return (() => {
       //payload  -> pcd.workVersion
       let projectInd = [];
@@ -1153,8 +1164,6 @@ export default (state = defState, action) => {
     // })()
     case 'ADD_FRIEND': 
       //payload === user 
-      debugger
-      console.log(payload)
       return (() => {
         const {userData} = payload
         state.personObj.userData.friends.push({superId: userData.superId, lastProject: null});
@@ -1240,8 +1249,6 @@ export default (state = defState, action) => {
         // по сути работы ф похожа на chooseMe, так что все подробное объяснение там.
         // Возможно функции будут слиты в одну.
         // Алгорит описана в INIT
-
-        debugger
         let friendInd = [];
         mineInd(state.friends, payload, ['userData', 'superId'], friendInd);
 
@@ -1308,7 +1315,6 @@ export default (state = defState, action) => {
         }
       })()
     case 'INIT':
-      debugger
       return (() => {
         // Прокоментить каждое действие и интегрировать mineInd
 
@@ -1325,7 +1331,6 @@ export default (state = defState, action) => {
         // 6. Находится рабочая версия или нет.
         // 7. И ластовые проверки на существование рабочей высоты, Если хоть чего то нет, то редирект на error.
 
-        console.log('%c%s', 'color: pink; font-size: 22px', "DEBUG:", payload);
         const {friends, personObj: {projects, projectsCoordsData, lastProject, lastPerson, userData: {superId}}} = payload;
         state.personObj = payload.personObj // 1
 
@@ -1391,7 +1396,6 @@ export default (state = defState, action) => {
           }
           
         } else { // спавнимся в гостях
-          debugger
           // обработать ошибку с отключенным аксессом и в следствии этого упавшим проектом
 
           // поиск проекта и метаданных у другого персонажа
